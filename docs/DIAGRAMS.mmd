@@ -1,0 +1,23 @@
+flowchart TD
+  Client -->|Signal| Server
+  Server --> Redis
+  Redis --> Matchmaking
+
+%% Gameface System Diagram
+  subgraph Gameface System
+    Client[Client Application]
+    Server[Gameface Server]
+    Redis[Redis Cache]
+    Matchmaking[Matchmaking Service]
+    Modules[Educational Modules]
+    Security[Security Layer]
+    Availability[Availability Monitoring]
+    Consistency[Data Consistency Service]
+    Reliability[Reliability Service]
+  end
+
+  Matchmaking --> Modules
+  Server --> Security
+  Server --> Availability
+  Redis --> Consistency
+  Matchmaking --> Reliability
