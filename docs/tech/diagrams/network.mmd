@@ -1,0 +1,40 @@
+%% Network Diagram
+graph TD
+  User[User Device] -->|WebSocket| WebClient[Web Client]
+  WebClient -->|Signaling| SignalingServer[Signaling Server]
+  WebClient -->|STUN/TURN| STUNTURN[STUN/TURN Servers]
+  WebClient -->|API Requests| BackendAPI[Backend API]
+  WebClient -->|Matchmaking| MatchmakingService[Matchmaking Service]
+  WebClient -->|Notifications| NotificationService[Notification Service]
+  WebClient -->|Video/Audio Streams| MediaServer[Media Server]
+
+  SignalingServer -->|Media| MediaServer
+  SignalingServer -->|Database| Database[Database]
+  SignalingServer -->|Cache| Redis[Redis Pub/Sub]
+
+  BackendAPI -->|Database| Database
+  BackendAPI -->|Auth| AuthService[Authentication Service]
+  BackendAPI -->|Notifications| NotificationService
+  BackendAPI -->|Pub/Sub| Redis
+
+  AuthService -->|Database| Database
+
+  MatchmakingService -->|Session Management| SignalingServer
+  MatchmakingService -->|Database| Database
+  MatchmakingService -->|Pub/Sub| Redis
+
+  MediaServer -->|Cache| Redis
+  MediaServer -->|Media Relay| STUNTURN
+
+  STUNTURN -->|Relay Services| WebClient
+  STUNTURN -->|Relay Services| MediaServer
+  STUNTURN -->|NAT Traversal| WebClient
+
+  Redis -->|Cache Services| SignalingServer
+  Redis -->|Cache Services| BackendAPI
+  Redis -->|Cache Services| MatchmakingService
+  Redis -->|Cache Services| MediaServer
+
+  Database -->|Data Storage| SignalingServer
+  Database -->|Data Storage| BackendAPI
+  Database -->|Data Storage| MatchmakingService

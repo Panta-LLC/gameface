@@ -1,0 +1,43 @@
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Connecting : User initiates connection
+    Connecting --> Connected : Connection established
+    Connected --> InGame : User starts game
+    InGame --> Disconnected : User disconnects
+    Disconnected --> Idle : Cleanup complete
+
+    [*] --> VideoOff
+    VideoOff --> VideoOn : User enables video
+    VideoOn --> VideoOff : User disables video
+
+    [*] --> AudioMuted
+    AudioMuted --> AudioUnmuted : User unmutes audio
+    AudioUnmuted --> AudioMuted : User mutes audio
+
+    Connected --> Reconnecting : Connection lost
+    Reconnecting --> Connected : Connection restored
+    Reconnecting --> Disconnected : Reconnection failed
+
+    InGame --> GameOver : Game ends
+    GameOver --> Idle : Return to idle state
+
+    note right of Connected : User is connected to the service
+    note left of InGame : User is actively playing a GameFace game
+    note right of Reconnecting : Attempting to restore connection
+    note left of GameOver : Game session has ended
+    note right of VideoOn : Video stream is active
+    note left of AudioUnmuted : Audio is live
+
+    %% Styling
+    classDef activeState fill:#f9f,stroke:#333,stroke-width:2px;
+    class Connected,InGame activeState;
+    classDef inactiveState fill:#bbb,stroke:#333,stroke-width:2px;
+    class Disconnected,Idle inactiveState;
+    classDef transitionalState fill:#ff9,stroke:#333,stroke-width:2px;
+    class Connecting,Reconnecting transitionalState;  
+    classDef mediaState fill:#9ff,stroke:#333,stroke-width:2px;
+    class VideoOn,VideoOff,AudioMuted,AudioUnmuted mediaState;
+    classDef endState fill:#f99,stroke:#333,stroke-width:2px;
+    class GameOver endState;
+
+    %% End of diagram

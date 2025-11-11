@@ -1,0 +1,42 @@
+@startuml Gameface Class Diagram
+class User {
+  +String username
+  +String email
+  +String password
+  +login()
+  +logout()
+}
+
+class Video {
+  +String title
+  +String description
+  +upload()
+  +stream()
+}
+
+class Payment {
+  +String paymentId
+  +Double amount
+  +processPayment()
+}
+
+class Comment {
+  +String content
+  +Date timestamp
+  +postComment()
+}
+
+class Admin {
+  +String adminId
+  +manageUsers()
+  +viewReports()
+}
+
+Admin --> User
+
+Video --> Comment
+User --> Comment
+
+User --> Video
+User --> Payment
+@enduml

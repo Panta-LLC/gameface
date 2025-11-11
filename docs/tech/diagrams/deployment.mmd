@@ -1,0 +1,35 @@
+%% Deployment Diagram for GameFace Architecture %%
+
+graph TD
+    subgraph Client Side
+        A[User's Browser]
+    end
+
+    subgraph Backend Services
+        B[API Gateway]
+        C[Auth Service]
+        D[WebRTC Signaling Service]
+        E[Media Server]
+        F[Redis Pub/Sub]
+        G["Database (PostgreSQL)"]
+    end
+
+    subgraph Infrastructure
+        H["AWS ECS Cluster"]
+        I["AWS RDS Instance"]
+        J["AWS ElastiCache (Redis)"]
+    end
+
+    A -->|HTTP Requests| B
+    B -->|Auth Requests| C
+    B -->|Signaling Requests| D
+    D -->|Media Streams| E
+    E -->|Pub/Sub Messages| F
+    C -->|DB Queries| G
+    F -->|Cache Reads/Writes| J
+    G -->|Data Storage| I
+
+    B --> H
+    C --> H
+    D --> H
+    E --> H

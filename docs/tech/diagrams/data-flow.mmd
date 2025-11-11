@@ -1,0 +1,16 @@
+%% Data Flow Diagram for GameFace Architecture %%
+
+graph TD
+    A["Client (Browser)"] -->|WebRTC Signaling| B["Signaling Server (Node.js)"]
+    A -->|Media Stream| C["STUN/TURN Servers"]
+    B --> D["Redis Pub/Sub"]
+    D --> B
+    B --> E["Media Server (Optional)"]
+    E --> C
+    A --> F["Backend API (Express.js)"]
+    F --> G["Database (PostgreSQL)"]
+    F --> H["Authentication Service (JWT)"]
+    F --> I["Notification Service (WebSockets)"]
+    I --> A
+    G --> F
+    H --> F

@@ -1,0 +1,53 @@
+%% Sequence Diagram for User Authentication and Game Session Management %%
+sequenceDiagram
+  participant User
+  participant Frontend
+  participant AuthService
+  participant GameService
+  participant Database    
+
+  %% Authentication Flow %%
+  User->>Frontend: Open GameFace App
+  Frontend->>AuthService: Authenticate User
+  AuthService->>Database: Verify Credentials
+  Database-->>AuthService: Return User Data
+  AuthService-->>Frontend: Return Auth Token
+
+  %% Game Session Management Flow %%
+  Frontend->>GameService: Start Game Session
+  GameService->>Database: Create Game Session
+  Database-->>GameService: Return Session ID
+  GameService-->>Frontend: Return Game Session Info
+  Frontend-->>User: Display Game Session Info
+
+  User->>Frontend: Join Game Session
+  Frontend->>GameService: Request to Join Session
+  GameService->>Database: Update Session Participants
+  Database-->>GameService: Confirm Participant Added
+  GameService-->>Frontend: Confirm Join Success
+  Frontend-->>User: Display Joined Session Info 
+
+  %% In-Game Actions %%
+  User->>Frontend: Send In-Game Action
+  Frontend->>GameService: Process In-Game Action
+  GameService->>Database: Update Game State
+  Database-->>GameService: Confirm Game State Updated
+  GameService-->>Frontend: Return Updated Game State
+  Frontend-->>User: Display Updated Game State  
+  
+  %% Logout Flow %%
+  User->>Frontend: Leave Game Session
+  Frontend->>GameService: Request to Leave Session
+  GameService->>Database: Update Session Participants
+  Database-->>GameService: Confirm Participant Removed
+  GameService-->>Frontend: Confirm Leave Success
+  Frontend-->>User: Display Session Left Confirmation
+  User->>Frontend: Logout
+  Frontend->>AuthService: Invalidate Auth Token
+  AuthService->>Database: Update User Status
+  Database-->>AuthService: Confirm Status Updated
+  AuthService-->>Frontend: Confirm Logout Success
+  Frontend-->>User: Display Logout Confirmation
+
+%% End of Sequence Diagram %%
+

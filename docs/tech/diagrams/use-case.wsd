@@ -1,0 +1,35 @@
+@startuml Gameface Use Case
+actor User as U
+actor Admin as A
+
+usecase UC1 as "User Login"
+usecase UC2 as "View Profile"
+usecase UC3 as "Edit Profile"
+usecase UC4 as "Logout"
+usecase UC5 as "Manage Users"
+usecase UC6 as "View Reports"
+usecase UC7 as "Change Password"
+usecase UC8 as "Upload Avatar"
+usecase UC9 as "Delete Account"
+usecase UC10 as "Start Game"
+usecase UC11 as "Join Game"
+usecase UC12 as "Play Game"
+usecase UC13 as "View Game Stats"
+
+U --> UC1
+U --> UC2
+U --> UC3
+U --> UC4
+U --> UC7
+U --> UC8
+U --> UC9
+U --> UC10
+U --> UC11
+U --> UC12
+U --> UC13
+
+A --> UC1
+A --> UC5
+A --> UC6
+
+@enduml

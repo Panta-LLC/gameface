@@ -1,0 +1,10 @@
+graph TD
+  A[User] -->|Login/Register| B[Auth Service]
+  B --> C[Database]
+  A -->|Join Session| D[Matchmaking Service]
+  D --> E[Session Service]
+  E --> F[WebRTC Signaling Server]
+  F --> G[Peer-to-Peer Video Chat]
+  E --> H[Mini-Game Service]
+  H --> A
+  E --> I[Redis Pub/Sub]

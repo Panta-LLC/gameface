@@ -1,0 +1,14 @@
+graph TD
+  subgraph Consistency
+    A[Client Request] --> B[Write to Primary]
+    B --> C[Replication to Secondaries]
+  end
+  subgraph Availability
+    D[Load Balancer] --> E[Healthy Instances]
+    E --> F[Auto Scaling]
+  end
+  subgraph PartitionTolerance
+    G[Sharded Database] --> H[Data Distribution]
+  end
+  Consistency --> Availability
+  Availability --> PartitionTolerance

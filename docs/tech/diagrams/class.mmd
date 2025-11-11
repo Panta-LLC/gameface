@@ -1,0 +1,23 @@
+```mermaid
+classDiagram
+  class User {
+    +String username
+    +String email
+    +String password
+    +login()
+    +logout()
+  }
+  class Video {
+    +String title
+    +String description
+    +upload()
+    +stream()
+  }
+  class Payment {
+    +String paymentId
+    +Double amount
+    +processPayment()
+  }
+  User --> Video
+  User --> Payment
+```

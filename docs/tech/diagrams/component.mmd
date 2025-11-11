@@ -1,0 +1,40 @@
+%% Components
+flowchart TD
+  Client[Client Application]
+  Server[Signaling Server]
+  Redis[Redis Pub/Sub]
+  Matchmaking[Matchmaking Service]
+  MediaServer["Media Server (Optional)"]
+  Database[Database]
+  AuthService[Authentication Service]
+  NotificationService[Notification Service]
+  STUNTURN[STUN/TURN Servers] 
+  BackendAPI[Backend API]
+
+  Client -->|Signal| Server
+  Client -->|Signal| Redis
+  Client -->|Signal| Matchmaking
+  Client -->|Signal| MediaServer
+  Client -->|Signal| Database
+  Client -->|Signal| AuthService
+  Client -->|Signal| NotificationService
+  Client -->|Signal| STUNTURN
+  Client -->|Signal| BackendAPI
+
+  Server -->|Signal| Redis
+  Server -->|Signal| Matchmaking
+
+  Redis -->|Signal| Matchmaking
+
+  BackendAPI -->|Signal| Database
+  BackendAPI -->|Signal| AuthService
+  BackendAPI -->|Signal| NotificationService
+
+  Database <-->|Signal| BackendAPI
+  AuthService <-->|Signal| BackendAPI
+  NotificationService <-->|Signal| BackendAPI
+  STUNTURN <-->|Signal| Client
+  MediaServer <-->|Signal| Client
+  Matchmaking <-->|Signal| Client
+  Redis <-->|Signal| Client
+  Server <-->|Signal| Client

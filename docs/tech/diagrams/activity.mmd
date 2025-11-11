@@ -1,0 +1,44 @@
+%% Activity Diagram
+sequenceDiagram
+title GameFace User Interaction Flow
+actor User
+participant "Web Client" as WebClient
+participant "Signaling Server" as SignalingServer
+participant "Media Server" as MediaServer
+participant "Database" as Database  
+
+User -> WebClient: Open GameFace App
+WebClient -> SignalingServer: Request Auth Token
+SignalingServer -> Database: Verify User Credentials
+Database -->> SignalingServer: Return User Data
+SignalingServer -->> WebClient: Return Auth Token
+WebClient -> SignalingServer: Start Game Session
+SignalingServer -> Database: Create Game Session
+Database -->> SignalingServer: Return Session ID
+SignalingServer -->> WebClient: Return Game Session Info
+WebClient -->> User: Display Game Session Info
+User -> WebClient: Join Game Session
+WebClient -> SignalingServer: Request to Join Session
+SignalingServer -> Database: Update Session Participants
+Database -->> SignalingServer: Confirm Participant Added
+SignalingServer -->> WebClient: Confirm Join Success
+WebClient -->> User: Display Joined Session Info
+User -> WebClient: Send In-Game Action
+WebClient -> SignalingServer: Process In-Game Action
+SignalingServer -> Database: Update Game State
+Database -->> SignalingServer: Confirm Game State Updated
+SignalingServer -->> WebClient: Return Updated Game State
+WebClient -->> User: Display Updated Game State
+User -> WebClient: Leave Game Session
+WebClient -> SignalingServer: Request to Leave Session
+SignalingServer -> Database: Update Session Participants
+Database -->> SignalingServer: Confirm Participant Removed
+SignalingServer -->> WebClient: Confirm Leave Success
+WebClient -->> User: Display Session Left Confirmation
+User -> WebClient: Logout
+WebClient -> SignalingServer: Invalidate Auth Token
+SignalingServer -> Database: Update User Status
+Database -->> SignalingServer: Confirm Status Updated
+SignalingServer -->> WebClient: Confirm Logout Success
+WebClient -->> User: Display Logout Confirmation
+%% End of Activity Diagram %% 

@@ -1,0 +1,18 @@
+graph TD
+  subgraph LoadBalancing
+    A[Client Requests] --> B[Amazon CloudFront]
+    B --> C[Elastic Load Balancer]
+    C --> D[Amazon EC2 Instances / AWS Fargate]
+  end
+  subgraph Caching
+    E[Amazon ElastiCache] --> F[Amazon RDS / Aurora]
+  end
+  subgraph DatabaseSharding
+    G[Amazon DynamoDB] --> H[Partitioned Data]
+  end
+  subgraph AsynchronousProcessing
+    I[Amazon SQS] --> J[AWS Lambda / Worker Nodes]
+  end
+  LoadBalancing --> Caching
+  Caching --> DatabaseSharding
+  DatabaseSharding --> AsynchronousProcessing

@@ -1,0 +1,17 @@
+graph TD
+  subgraph FaultTolerance
+    A[Load Balancer] --> B[Health Checks]
+    B --> C[Auto Scaling]
+  end
+  subgraph DataReplication
+    D[Primary Database] --> E[Read Replicas]
+  end
+  subgraph BackupAndRestore
+    F[Automated Backups] --> G[Point-in-Time Recovery]
+  end
+  subgraph MonitoringAndAlerting
+    H[Application Performance Monitoring] --> I[Incident Response]
+  end
+  FaultTolerance --> DataReplication
+  DataReplication --> BackupAndRestore
+  BackupAndRestore --> MonitoringAndAlerting
