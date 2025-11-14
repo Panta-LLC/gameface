@@ -1,0 +1,50 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "Project for the GameFace application",
+      "versions": [
+        {
+          "name": "MVP",
+          "released": false
+        }
+      ],
+      "components": [
+        "Backend",
+        "Frontend"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-3-mini-game",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": [
+            "spades-game",
+            "card-game"
+          ],
+          "summary": "Implement Spades card game",
+          "description": "Develop the Spades card game for both 2 and 4 players. Ensure the core mechanics are general enough to support multiple card games.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "story-3-spades-game"
+        }
+      ]
+    }
+  ]
+}
