@@ -16,9 +16,9 @@ const GAME_EVENTS = {
  * GameEngine class to manage the core mechanics of a game.
  */
 class GameEngine extends EventEmitter {
-  private players: string[];
-  private state: { started: boolean; moves: any[] };
-  private scoring: Record<string, number>;
+  protected players: string[]; // Changed from private to protected
+  protected state: { started: boolean; moves: any[] }; // Changed from private to protected
+  protected scoring: Record<string, number>; // Changed from private to protected
 
   constructor() {
     super();
