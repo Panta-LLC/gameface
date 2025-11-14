@@ -51,5 +51,8 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "dependencies": {
+    "express-rate-limit": "^8.2.1"
   }
 }
