@@ -1,0 +1,3 @@
+## Deprecated: migrated to npm workspaces managed via package.json.
+## This file is retained for reference only and is not required by npm.
+packages: []

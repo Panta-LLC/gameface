@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+npm run -ws lint --if-present && npm run -ws typecheck --if-present && npm run -ws test --if-present

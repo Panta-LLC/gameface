@@ -97,3 +97,66 @@ Build a working demo of a 2-player video chat with a mini-game and matchmaking s
 - Set up a YouTube channel or platform for publishing.
 - Create a consistent branding style for videos.
 - Schedule regular updates to keep the audience engaged.
+
+## Development
+
+This subfolder is a Node.js monorepo managed with npm workspaces.
+
+### Prerequisites
+
+- Node.js 18+ (recommended 20+)
+- npm 10+
+
+### Install and bootstrap
+
+```sh
+cd gameface
+npm run bootstrap
+```
+
+This installs all workspace deps and enables Git hooks (Husky).
+
+### Useful scripts
+
+- Run dev servers across apps:
+  ```sh
+  npm run dev
+  ```
+- Build everything:
+  ```sh
+  npm run build
+  ```
+- Lint, format, and typecheck across all workspaces:
+  ```sh
+  npm run lint
+  npm run format
+  npm run typecheck
+  ```
+- Run tests across workspaces:
+  ```sh
+  npm test
+  ```
+
+### Apps
+
+- API: `apps/api` (Express). Dev: `npm run -w @gameface/api dev`
+- Signaling: `apps/signaling` (WebSocket via `ws`). Dev: `npm run -w @gameface/signaling dev`
+- Web: `apps/web` (React + Vite). Dev: `npm run -w @gameface/web dev`
+
+### Packages
+
+- Shared: `packages/shared` (shared utils/types)
+- Config: `packages/config` (shared ESLint/TS config)
+
+### Commits & PRs
+
+- Conventional Commits enforced via commitlint.
+- Pre-commit runs lint-staged (ESLint + Prettier on changed files).
+- Optional guided commits:
+  ```sh
+  npm run commit
+  ```
+
+### Notes on path aliases
+
+TypeScript path alias `@shared/*` is configured for authoring. For runtime/bundling, prefer importing the workspace package `@gameface/shared` once built.
