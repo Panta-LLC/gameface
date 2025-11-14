@@ -143,6 +143,20 @@ This installs all workspace deps and enables Git hooks (Husky).
 - Signaling: `apps/signaling` (WebSocket via `ws`). Dev: `npm run -w @gameface/signaling dev`
 - Web: `apps/web` (React + Vite). Dev: `npm run -w @gameface/web dev`
 
+### Feature Documentation
+
+Feature docs live in `docs/features/` and use a standard template:
+
+- Index: `docs/features/README.md`
+- Template: `docs/features/TEMPLATE.md`
+- Current docs:
+  - `docs/features/tooling-monorepo.md`
+  - `docs/features/commit-pr-hygiene.md`
+  - `docs/features/shared.md`
+  - `docs/features/api.md`
+  - `docs/features/signaling.md`
+  - `docs/features/web.md`
+
 ### Packages
 
 - Shared: `packages/shared` (shared utils/types)

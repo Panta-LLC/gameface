@@ -41,3 +41,14 @@ npm run format
 - Keep PRs focused and small when possible.
 - Ensure `npm run build`, `npm run typecheck`, and `npm test` pass.
 - Link issues and describe changes clearly.
+
+## Feature docs are required
+
+For any new feature or behavior change, include a docs update under `docs/features/` based on `TEMPLATE.md`.
+
+Suggested PR checklist:
+
+- [ ] Code builds and tests pass
+- [ ] Lint and typecheck pass
+- [ ] Docs updated (`docs/features/*`)
+- [ ] Security/observability notes updated when relevant
