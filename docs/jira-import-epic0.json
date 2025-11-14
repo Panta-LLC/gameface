@@ -1,0 +1,121 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "Project for the GameFace application",
+      "versions": [
+        {
+          "name": "MVP",
+          "released": false
+        }
+      ],
+      "components": [
+        "Backend",
+        "Frontend",
+        "DevOps"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "issueType": "Epic",
+          "priority": "High",
+          "labels": [
+            "setup",
+            "tooling"
+          ],
+          "summary": "Epic 0: Initial Application Setup",
+          "description": "Establish the foundation for development with consistent tooling, repository structure, environment configuration, and local runtime.\n\nFeatures:\n- Repository bootstrap (tooling, conventions, structure).\n- Environment and configuration management.\n- Project scaffolding for frontend, backend, signaling, and shared types.",
+          "components": [
+            "Backend",
+            "Frontend",
+            "DevOps"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "epic-0-initial-setup"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-0-initial-setup",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": [
+            "setup",
+            "tooling"
+          ],
+          "summary": "Repository bootstrap (workspaces, linting, commits)",
+          "description": "Set up package manager workspaces, shared TypeScript configs, ESLint/Prettier, commit conventions (commitlint), PR templates, and CODEOWNERS.",
+          "components": [
+            "Frontend",
+            "Backend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "story-0-repo-bootstrap"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-0-initial-setup",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": [
+            "configuration",
+            "secrets"
+          ],
+          "summary": "Environment and configuration management",
+          "description": "Create .env.example, implement schema-validated config loader, set up per-environment overrides, and ensure secrets are not committed.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "story-0-environment-config"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-0-initial-setup",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": [
+            "scaffolding",
+            "devops"
+          ],
+          "summary": "Project scaffolding and local runtime",
+          "description": "Scaffold frontend, backend API, and signaling service with shared types; add Dockerfiles and docker-compose for local Mongo/Redis and apps.",
+          "components": [
+            "DevOps",
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "story-0-project-scaffolding"
+        }
+      ]
+    }
+  ]
+}
