@@ -16,6 +16,9 @@ import { Request, Response } from 'express';
  * 3. refreshTokenHandler: Handles token refresh requests.
  *    - Placeholder implementation for refreshing tokens.
  *
+ * 4. logoutHandler: Handles user logout requests.
+ *    - Placeholder implementation for user logout.
+ *
  * Security Measures:
  * - Rate limiting is applied to the loginHandler to enhance security.
  * - Error messages are generic to avoid revealing sensitive information.
@@ -53,4 +56,15 @@ export const socialLoginHandler = (req: Request, res: Response) => {
 export const refreshTokenHandler = (req: Request, res: Response) => {
   // Placeholder implementation
   res.status(200).json({ message: 'Token refreshed successfully' });
+};
+
+// Handler for user logout
+export const logoutHandler = async (req: Request, res: Response) => {
+  try {
+    // Placeholder for logout logic
+    // Invalidate user session or token here
+    res.status(200).json({ message: 'Logout successful' });
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred during logout' });
+  }
 };
