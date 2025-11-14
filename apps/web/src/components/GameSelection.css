@@ -1,0 +1,44 @@
+.game-selection {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.game-selection h2 {
+  text-align: center;
+  color: #333;
+}
+
+.game-selection ul {
+  list-style: none;
+  padding: 0;
+}
+
+.game-selection li {
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.game-selection li:hover {
+  background-color: #e6e6e6;
+}
+
+.game-selection li.selected {
+  background-color: #d1e7dd;
+  border-color: #0f5132;
+}
+
+.game-details {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+}

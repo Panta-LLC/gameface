@@ -34,3 +34,25 @@ npm run -w @gameface/web preview
 - Component library and design tokens
 - State management for lobby/gameplay
 - WebRTC integration with signaling
+
+## Game Selection
+
+### Overview
+
+The game selection feature enables users to select games in real-time. This functionality is powered by WebSocket integration, ensuring that updates are synchronized across all connected clients.
+
+### Implementation
+
+- **Frontend**: The game selection interface is built using React and is part of the `GameSelection.tsx` component.
+- **Backend**: A WebSocket server handles real-time communication, ensuring low-latency updates.
+
+### Key Features
+
+- **Real-Time Synchronization**: Updates are broadcast to all clients instantly.
+- **Error Handling**: Includes mechanisms to handle network disruptions gracefully.
+- **Scalability**: Optimized for multiple concurrent users.
+
+### Future Enhancements
+
+- Improved UI/UX for game selection.
+- Enhanced scalability for larger user bases.

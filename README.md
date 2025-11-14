@@ -157,6 +157,16 @@ Feature docs live in `docs/features/` and use a standard template:
   - `docs/features/signaling.md`
   - `docs/features/web.md`
 
+## Game Selection Feature
+
+The game selection interface allows users to choose games in real-time. This feature is implemented using WebSocket technology to ensure seamless synchronization across all connected clients. Key highlights include:
+
+- **Real-Time Updates**: Changes made by one user are instantly reflected for all other users.
+- **Error Handling**: Robust error handling ensures a smooth user experience even in case of network disruptions.
+- **Scalability**: Designed to handle multiple concurrent users efficiently.
+
+For more details, refer to the [feature documentation](docs/features/web.md).
+
 ### Packages
 
 - Shared: `packages/shared` (shared utils/types)
