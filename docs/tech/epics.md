@@ -24,6 +24,8 @@
   - Peer-to-peer video streaming.
   - Audio and video controls (mute/unmute, camera on/off).
   - Connection stability and error handling.
+  - Developed WebRTC signaling server.
+  - Tested signaling server for compatibility and stability.
 
 ## Epic 3: Mini-Game Integration
 

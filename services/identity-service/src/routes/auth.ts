@@ -1,5 +1,10 @@
 import express from 'express';
-import { loginHandler, socialLoginHandler, refreshTokenHandler, sessionPersistenceHandler } from '../controllers/auth';
+import {
+  loginHandler,
+  socialLoginHandler,
+  refreshTokenHandler,
+  sessionPersistenceHandler,
+} from '../controllers/auth';
 
 const router = express.Router();
 

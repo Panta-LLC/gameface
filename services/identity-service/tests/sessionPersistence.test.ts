@@ -21,9 +21,7 @@ describe('Session Persistence', () => {
   it('should validate an active session', async () => {
     redisClient.get.mockResolvedValue('valid-session');
 
-    const response = await request(app)
-      .get('/session')
-      .set('Authorization', 'Bearer valid-token');
+    const response = await request(app).get('/session').set('Authorization', 'Bearer valid-token');
 
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Session is active');

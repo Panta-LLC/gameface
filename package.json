@@ -55,6 +55,8 @@
     }
   },
   "dependencies": {
-    "express-rate-limit": "^8.2.1"
+    "express-rate-limit": "^8.2.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   }
 }
