@@ -19,7 +19,9 @@ function waitForMessage(ws: WebSocket): Promise<string> {
 describe('Signaling WebSocket', () => {
   it('sends hello then echoes messages', async () => {
     // Use ephemeral port
-    const { wss } = createSignalingServer(0);
+    const httpServer = require('http').createServer();
+    const { wss } = createSignalingServer(httpServer);
+    httpServer.listen(0); // Use ephemeral port
     const address = wss.address();
     if (typeof address === 'string' || address == null) throw new Error('unexpected address type');
     const port = address.port;
