@@ -1,0 +1,113 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "GameFace project for video conferencing tailored for gamers.",
+      "versions": [
+        {
+          "name": "v1.0",
+          "released": false
+        }
+      ],
+      "components": [
+        "Testing"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "issueType": "Epic",
+          "priority": "High",
+          "labels": [
+            "testing",
+            "quality-assurance"
+          ],
+          "summary": "Epic 9: Testing and Quality Assurance",
+          "description": "Implement a comprehensive testing strategy to ensure system reliability.\n\nFeatures:\n- Unit, integration, and end-to-end testing.\n- Load testing for high user traffic.\n- Automated test execution in CI/CD pipelines.",
+          "components": [
+            "Testing"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "epic-9-testing-quality-assurance"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-9-testing-quality-assurance",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "unit-testing",
+            "integration-testing"
+          ],
+          "summary": "Develop Unit and Integration Tests",
+          "description": "Write unit and integration tests to ensure code reliability and functionality.",
+          "components": [
+            "Testing"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-9-unit-integration-tests"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-9-testing-quality-assurance",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "load-testing",
+            "performance"
+          ],
+          "summary": "Conduct Load Testing",
+          "description": "Perform load testing to evaluate system performance under high user traffic.",
+          "components": [
+            "Testing"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-9-load-testing"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-9-testing-quality-assurance",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "automation",
+            "ci-cd"
+          ],
+          "summary": "Automate Test Execution in CI/CD",
+          "description": "Integrate automated test execution into the CI/CD pipelines.",
+          "components": [
+            "Testing"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-9-automated-tests"
+        }
+      ]
+    }
+  ]
+}

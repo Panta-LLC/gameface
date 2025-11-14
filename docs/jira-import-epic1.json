@@ -1,0 +1,136 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "Project for the GameFace application",
+      "versions": [
+        {
+          "name": "MVP",
+          "released": false
+        }
+      ],
+      "components": [
+        "Backend",
+        "Frontend"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "issueType": "Epic",
+          "priority": "High",
+          "labels": [
+            "authentication",
+            "session-management"
+          ],
+          "summary": "Epic 1: User Authentication and Session Management",
+          "description": "Implement a secure and scalable user authentication system, including login, registration, and session management.\n\nFeatures:\n- User registration and login.\n- Secure password storage and authentication.\n- Session persistence and management.\n- Logout functionality.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "epic-1-auth-session"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-1-auth-session",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": [
+            "authentication"
+          ],
+          "summary": "Implement user registration",
+          "description": "Develop the backend and frontend for user registration, including form validation and secure data handling.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "story-1-user-registration"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-1-auth-session",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": [
+            "authentication"
+          ],
+          "summary": "Implement user login",
+          "description": "Develop the backend and frontend for user login, including secure password verification and session creation.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "story-2-user-login"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-1-auth-session",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "session-management"
+          ],
+          "summary": "Implement session persistence",
+          "description": "Ensure user sessions are persisted securely across server restarts and user interactions.",
+          "components": [
+            "Backend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "task-1-session-persistence"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-1-auth-session",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "authentication"
+          ],
+          "summary": "Implement logout functionality",
+          "description": "Develop the backend and frontend for user logout, ensuring session termination and security.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "task-2-logout-functionality"
+        }
+      ]
+    }
+  ]
+}

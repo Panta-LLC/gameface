@@ -1,0 +1,117 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "GameFace project for video conferencing tailored for gamers.",
+      "versions": [
+        {
+          "name": "v1.0",
+          "released": false
+        }
+      ],
+      "components": [
+        "Backend",
+        "Frontend"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "issueType": "Epic",
+          "priority": "High",
+          "labels": [
+            "security",
+            "authentication"
+          ],
+          "summary": "Epic 6: Security Enhancements",
+          "description": "Implement security measures to protect user data and ensure secure communication.\n\nFeatures:\n- End-to-end encryption for video calls.\n- Secure storage of user credentials.\n- Regular security audits.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "epic-6-security-enhancements"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-6-security-enhancements",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "security",
+            "encryption"
+          ],
+          "summary": "Implement End-to-End Encryption",
+          "description": "Develop and integrate end-to-end encryption for video calls to ensure secure communication.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-6-encryption"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-6-security-enhancements",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "security",
+            "credentials"
+          ],
+          "summary": "Secure Credential Storage",
+          "description": "Ensure user credentials are stored securely using industry best practices.",
+          "components": [
+            "Backend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-6-credential-storage"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-6-security-enhancements",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "security",
+            "audit"
+          ],
+          "summary": "Conduct Security Audits",
+          "description": "Perform regular security audits to identify and mitigate vulnerabilities.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-6-security-audits"
+        }
+      ]
+    }
+  ]
+}

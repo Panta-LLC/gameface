@@ -1,0 +1,114 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "Project for the GameFace application",
+      "versions": [
+        {
+          "name": "MVP",
+          "released": false
+        }
+      ],
+      "components": [
+        "Backend",
+        "Frontend"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "issueType": "Epic",
+          "priority": "High",
+          "labels": [
+            "video-communication",
+            "real-time"
+          ],
+          "summary": "Epic 2: Real-Time Video Communication",
+          "description": "Develop the core video chat functionality using WebRTC for real-time communication.\n\nFeatures:\n- Peer-to-peer video streaming.\n- Audio and video controls (mute/unmute, camera on/off).\n- Connection stability and error handling.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "epic-2-video-communication"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-2-video-communication",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": [
+            "video-streaming"
+          ],
+          "summary": "Implement peer-to-peer video streaming",
+          "description": "Develop the WebRTC-based backend and frontend for establishing peer-to-peer video connections.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "story-1-peer-to-peer-video"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-2-video-communication",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": [
+            "video-controls"
+          ],
+          "summary": "Implement audio and video controls",
+          "description": "Develop the frontend and backend for audio and video controls, including mute/unmute and camera on/off functionality.",
+          "components": [
+            "Frontend",
+            "Backend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "story-2-audio-video-controls"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-2-video-communication",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "error-handling"
+          ],
+          "summary": "Implement connection stability mechanisms",
+          "description": "Ensure stable video connections by implementing reconnection logic and error handling for WebRTC.",
+          "components": [
+            "Backend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "task-1-connection-stability"
+        }
+      ]
+    }
+  ]
+}

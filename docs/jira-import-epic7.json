@@ -1,0 +1,116 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "GameFace project for video conferencing tailored for gamers.",
+      "versions": [
+        {
+          "name": "v1.0",
+          "released": false
+        }
+      ],
+      "components": [
+        "Backend",
+        "Frontend"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "issueType": "Epic",
+          "priority": "High",
+          "labels": [
+            "performance",
+            "optimization"
+          ],
+          "summary": "Epic 7: Performance Optimization",
+          "description": "Optimize the application for better performance and scalability.\n\nFeatures:\n- Reduce latency in video calls.\n- Optimize database queries.\n- Improve application load times.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "epic-7-performance-optimization"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-7-performance-optimization",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "performance",
+            "latency"
+          ],
+          "summary": "Reduce Video Call Latency",
+          "description": "Identify and address factors contributing to latency in video calls.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-7-reduce-latency"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-7-performance-optimization",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "performance",
+            "database"
+          ],
+          "summary": "Optimize Database Queries",
+          "description": "Refactor database queries to improve efficiency and reduce response times.",
+          "components": [
+            "Backend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-7-optimize-queries"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-7-performance-optimization",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "performance",
+            "load-time"
+          ],
+          "summary": "Improve Application Load Times",
+          "description": "Optimize the application to reduce load times for users.",
+          "components": [
+            "Frontend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-7-load-times"
+        }
+      ]
+    }
+  ]
+}

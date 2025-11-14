@@ -1,0 +1,48 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "GameFace MVP project for video conferencing tailored for gamers.",
+      "versions": [
+        {
+          "name": "v1.0",
+          "released": false
+        }
+      ],
+      "components": [
+        "Backend",
+        "Frontend"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "issueType": "Epic",
+          "priority": "High",
+          "labels": [
+            "backend",
+            "scalability"
+          ],
+          "summary": "Epic 4: Scalable Backend Architecture",
+          "description": "Design and implement a scalable backend architecture to support real-time communication and data persistence.\n\nFeatures:\n- RESTful APIs for user and session management.\n- Redis Pub/Sub for real-time messaging.\n- MongoDB for data storage.",
+          "components": [
+            "Backend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "epic-4-scalable-backend"
+        }
+      ]
+    }
+  ]
+}

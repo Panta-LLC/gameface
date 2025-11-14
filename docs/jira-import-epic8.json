@@ -1,0 +1,113 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "GameFace project for video conferencing tailored for gamers.",
+      "versions": [
+        {
+          "name": "v1.0",
+          "released": false
+        }
+      ],
+      "components": [
+        "DevOps"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "issueType": "Epic",
+          "priority": "High",
+          "labels": [
+            "deployment",
+            "monitoring"
+          ],
+          "summary": "Epic 8: Deployment and Monitoring",
+          "description": "Set up a robust deployment pipeline and monitoring system.\n\nFeatures:\n- CI/CD pipelines using GitHub Actions.\n- Docker containerization and AWS deployment.\n- Monitoring and observability with OpenTelemetry.",
+          "components": [
+            "DevOps"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "epic-8-deployment-monitoring"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-8-deployment-monitoring",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "ci-cd",
+            "github-actions"
+          ],
+          "summary": "Set Up CI/CD Pipelines",
+          "description": "Configure GitHub Actions for continuous integration and deployment.",
+          "components": [
+            "DevOps"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-8-ci-cd"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-8-deployment-monitoring",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "docker",
+            "aws"
+          ],
+          "summary": "Dockerize Application",
+          "description": "Create Docker images for the application and deploy to AWS.",
+          "components": [
+            "DevOps"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-8-dockerize"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-8-deployment-monitoring",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "monitoring",
+            "observability"
+          ],
+          "summary": "Implement Monitoring with OpenTelemetry",
+          "description": "Set up monitoring and observability using OpenTelemetry to track application performance.",
+          "components": [
+            "DevOps"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-8-monitoring"
+        }
+      ]
+    }
+  ]
+}

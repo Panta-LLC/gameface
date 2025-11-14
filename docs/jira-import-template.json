@@ -1,0 +1,49 @@
+{
+  "users": [
+    {
+      "name": "<ACCOUNT_ID>",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "<PROJECT_NAME>",
+      "key": "<PROJECT_KEY>",
+      "description": "<PROJECT_DESCRIPTION>",
+      "versions": [
+        {
+          "name": "<VERSION_NAME>",
+          "released": false
+        }
+      ],
+      "components": [
+        "<COMPONENT_1>",
+        "<COMPONENT_2>"
+      ],
+      "issues": [
+        {
+          "status": "<STATUS e.g., To Do>",
+          "reporter": "<ACCOUNT_ID>",
+          "assignee": "<ACCOUNT_ID or leave empty>",
+          "project": "<PROJECT_KEY>",
+          "parent": "<PARENT_ISSUE_KEY optional>",
+          "issueType": "<Story|Task|Bug|Epic>",
+          "priority": "<Highest|High|Medium|Low|Lowest>",
+          "labels": [
+            "<label1>",
+            "<label2>"
+          ],
+          "summary": "<SUMMARY>",
+          "description": "<DESCRIPTION>",
+          "components": [
+            "<COMPONENT_1>"
+          ],
+          "fixVersions": [
+            "<VERSION_NAME>"
+          ],
+          "externalId": "<EXTERNAL_ID>"
+        }
+      ]
+    }
+  ]
+}

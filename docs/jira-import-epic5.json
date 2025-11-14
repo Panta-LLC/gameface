@@ -1,0 +1,113 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "GameFace project for video conferencing tailored for gamers.",
+      "versions": [
+        {
+          "name": "v1.0",
+          "released": false
+        }
+      ],
+      "components": [
+        "Frontend"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "issueType": "Epic",
+          "priority": "High",
+          "labels": [
+            "frontend",
+            "ui-design"
+          ],
+          "summary": "Epic 5: Frontend Development",
+          "description": "Build a user-friendly interface that enhances the gaming and video chat experience.\n\nFeatures:\n- Intuitive UI for video calls and game interactions.\n- Responsive design for different devices.\n- Error handling and user notifications.",
+          "components": [
+            "Frontend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "epic-5-frontend-development"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-5-frontend-development",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "frontend",
+            "ui"
+          ],
+          "summary": "Design UI Mockups",
+          "description": "Create detailed UI mockups for the video chat and gaming interface.",
+          "components": [
+            "Frontend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-5-ui-mockups"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-5-frontend-development",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "frontend",
+            "responsive-design"
+          ],
+          "summary": "Implement Responsive Design",
+          "description": "Ensure the frontend is responsive and works seamlessly across devices.",
+          "components": [
+            "Frontend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-5-responsive-design"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-5-frontend-development",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "frontend",
+            "error-handling"
+          ],
+          "summary": "Develop Error Handling",
+          "description": "Implement error handling mechanisms and user notifications for the frontend.",
+          "components": [
+            "Frontend"
+          ],
+          "fixVersions": [
+            "v1.0"
+          ],
+          "externalId": "task-5-error-handling"
+        }
+      ]
+    }
+  ]
+}

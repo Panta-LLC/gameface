@@ -1,0 +1,114 @@
+{
+  "users": [
+    {
+      "name": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+      "active": true
+    }
+  ],
+  "projects": [
+    {
+      "name": "GameFace",
+      "key": "GF",
+      "description": "Project for the GameFace application",
+      "versions": [
+        {
+          "name": "MVP",
+          "released": false
+        }
+      ],
+      "components": [
+        "Backend",
+        "Frontend"
+      ],
+      "issues": [
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "issueType": "Epic",
+          "priority": "High",
+          "labels": [
+            "mini-game",
+            "integration"
+          ],
+          "summary": "Epic 3: Mini-Game Integration",
+          "description": "Integrate simple mini-games that users can play during video calls.\n\nFeatures:\n- Game selection interface.\n- Real-time synchronization of game state between users.\n- Basic game mechanics and scoring.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "epic-3-mini-game"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-3-mini-game",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": [
+            "game-selection"
+          ],
+          "summary": "Implement game selection interface",
+          "description": "Develop the frontend interface for selecting mini-games during video calls.",
+          "components": [
+            "Frontend"
+          ],
+          "fixVersions": [
+            "MVP"
+          ],
+          "externalId": "story-1-game-selection"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-3-mini-game",
+          "issueType": "Story",
+          "priority": "High",
+          "labels": [
+            "game-synchronization"
+          ],
+          "summary": "Implement real-time game state synchronization",
+          "description": "Ensure that the game state is synchronized in real-time between users during video calls.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "<VERSION_NAME>"
+          ],
+          "externalId": "story-2-game-synchronization"
+        },
+        {
+          "status": "To Do",
+          "reporter": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "assignee": "712020:7b962028-224e-4aac-8776-328277ffaad3",
+          "project": "GF",
+          "parent": "epic-3-mini-game",
+          "issueType": "Task",
+          "priority": "Medium",
+          "labels": [
+            "game-mechanics"
+          ],
+          "summary": "Develop basic game mechanics",
+          "description": "Implement the core mechanics for mini-games, including scoring and user interactions.",
+          "components": [
+            "Backend",
+            "Frontend"
+          ],
+          "fixVersions": [
+            "<VERSION_NAME>"
+          ],
+          "externalId": "task-1-game-mechanics"
+        }
+      ]
+    }
+  ]
+}
