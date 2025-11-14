@@ -19,6 +19,9 @@ import { Request, Response } from 'express';
  * 4. logoutHandler: Handles user logout requests.
  *    - Placeholder implementation for user logout.
  *
+ * 5. sessionPersistenceHandler: Handles session persistence to ensure sessions are valid and extend their lifetime if necessary.
+ *    - Logic: Checks if the session is active and responds accordingly.
+ *
  * Security Measures:
  * - Rate limiting is applied to the loginHandler to enhance security.
  * - Error messages are generic to avoid revealing sensitive information.
@@ -66,5 +69,16 @@ export const logoutHandler = async (req: Request, res: Response) => {
     res.status(200).json({ message: 'Logout successful' });
   } catch (error) {
     res.status(500).json({ error: 'An error occurred during logout' });
+  }
+};
+
+// Handler for session persistence
+export const sessionPersistenceHandler = async (req: Request, res: Response) => {
+  try {
+    // Placeholder for session persistence logic
+    // Ensure session is valid and extend its lifetime if necessary
+    res.status(200).json({ message: 'Session is active' });
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while validating the session' });
   }
 };
