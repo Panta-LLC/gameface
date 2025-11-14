@@ -8,6 +8,14 @@ See the step-by-step guide in [USAGE.md](./USAGE.md).
 
 ---
 
+## Epic 0 – Initial Application Setup
+
+Folder: [epic0](./epic0/README.md)
+
+- repo-bootstrap-implementation-prompt.md
+- environment-config-implementation-prompt.md
+- project-scaffolding-implementation-prompt.md
+
 ## Epic 1 – User Authentication and Session Management
 
 Folder: [epic1](./epic1/README.md)

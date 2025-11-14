@@ -1,5 +1,13 @@
 # Epics for the GameFace Project
 
+## Epic 0: Initial Application Setup
+
+- **Description**: Establish the foundation for development with consistent tooling, repository structure, environment configuration, and local runtime.
+- **Features**:
+  - Repository bootstrap: package manager, workspaces/monorepo layout, TypeScript config, linting/formatting, commit conventions, PR templates.
+  - Environment & configuration: `.env.example`, config schema/validation, secrets strategy, per‑env settings.
+  - Project scaffolding: frontend and backend skeletons, signaling server stub, shared types, Dockerfiles, and docker-compose for local Mongo/Redis.
+
 ## Epic 1: User Authentication and Session Management
 
 - **Description**: Implement a secure and scalable user authentication system, including login, registration, and session management.
