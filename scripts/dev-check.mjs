@@ -13,11 +13,18 @@ const results = [];
 async function checkApi() {
   const url = 'http://localhost:3000/health';
   try {
-    const res = await fetch(url, { headers: { 'accept': 'application/json' }, signal: AbortSignal.timeout(3000) });
+    const res = await fetch(url, {
+      headers: { accept: 'application/json' },
+      signal: AbortSignal.timeout(3000),
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
     const ok = json && json.ok === true;
-    results.push({ service: 'api', status: ok ? 'PASS' : 'FAIL', detail: ok ? 'health ok:true' : 'unexpected payload' });
+    results.push({
+      service: 'api',
+      status: ok ? 'PASS' : 'FAIL',
+      detail: ok ? 'health ok:true' : 'unexpected payload',
+    });
   } catch (e) {
     results.push({ service: 'api', status: 'FAIL', detail: e.message });
   }
@@ -68,7 +75,11 @@ async function checkWeb() {
     const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
     const text = await res.text();
     const hasVite = /<title>/i.test(text) || /Vite/i.test(text);
-    results.push({ service: 'web', status: hasVite ? 'PASS' : 'FAIL', detail: hasVite ? 'index.html loaded' : 'unexpected response' });
+    results.push({
+      service: 'web',
+      status: hasVite ? 'PASS' : 'FAIL',
+      detail: hasVite ? 'index.html loaded' : 'unexpected response',
+    });
   } catch (e) {
     results.push({ service: 'web', status: 'FAIL', detail: e.message });
   }
@@ -85,9 +96,9 @@ async function main() {
   const pad = (s) => s.padEnd(10);
   console.log('\nResults:');
   console.log(pad('Service'), pad('Status'), 'Detail');
-  results.forEach(r => console.log(pad(r.service), pad(r.status), r.detail));
+  results.forEach((r) => console.log(pad(r.service), pad(r.status), r.detail));
 
-  const failed = results.filter(r => r.status !== 'PASS');
+  const failed = results.filter((r) => r.status !== 'PASS');
   if (failed.length) {
     console.error(`\n${failed.length} service(s) failed.`);
     process.exitCode = 1;
