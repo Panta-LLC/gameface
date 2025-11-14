@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
+import { createClient } from 'redis';
 
 /**
  * Authentication Controllers
@@ -17,7 +18,7 @@ import { Request, Response } from 'express';
  *    - Placeholder implementation for refreshing tokens.
  *
  * 4. logoutHandler: Handles user logout requests.
- *    - Placeholder implementation for user logout.
+ *    - Logic: Invalidates the user token.
  *
  * 5. sessionPersistenceHandler: Handles session persistence to ensure sessions are valid and extend their lifetime if necessary.
  *    - Logic: Checks if the session is active and responds accordingly.
@@ -33,6 +34,15 @@ const loginRateLimiter = rateLimit({
   max: 5, // Limit each IP to 5 requests per windowMs
   message: 'Too many login attempts, please try again later.',
 });
+
+// Initialize Redis client
+const redisClient = createClient();
+
+redisClient.on('error', (err: Error) => console.error('Redis Client Error', err));
+
+(async () => {
+  await redisClient.connect();
+})();
 
 // Updated handler for user login
 export const loginHandler = [
@@ -64,8 +74,15 @@ export const refreshTokenHandler = (req: Request, res: Response) => {
 // Handler for user logout
 export const logoutHandler = async (req: Request, res: Response) => {
   try {
-    // Placeholder for logout logic
-    // Invalidate user session or token here
+    const token = req.headers.authorization?.split(' ')[1]; // Extract token from Authorization header
+
+    if (!token) {
+      return res.status(400).json({ error: 'No token provided' });
+    }
+
+    // Invalidate the token by removing it from Redis
+    await redisClient.del(`session:${token}`);
+
     res.status(200).json({ message: 'Logout successful' });
   } catch (error) {
     res.status(500).json({ error: 'An error occurred during logout' });
@@ -75,8 +92,21 @@ export const logoutHandler = async (req: Request, res: Response) => {
 // Handler for session persistence
 export const sessionPersistenceHandler = async (req: Request, res: Response) => {
   try {
-    // Placeholder for session persistence logic
-    // Ensure session is valid and extend its lifetime if necessary
+    const token = req.headers.authorization?.split(' ')[1]; // Extract token from Authorization header
+
+    if (!token) {
+      return res.status(400).json({ error: 'No token provided' });
+    }
+
+    // Validate the token by checking its existence in Redis
+    const session = await redisClient.get(`session:${token}`);
+    if (!session) {
+      return res.status(401).json({ error: 'Session expired or invalid' });
+    }
+
+    // Optionally extend the session lifetime
+    await redisClient.expire(`session:${token}`, 3600); // Extend by 1 hour
+
     res.status(200).json({ message: 'Session is active' });
   } catch (error) {
     res.status(500).json({ error: 'An error occurred while validating the session' });
