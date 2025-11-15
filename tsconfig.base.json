@@ -11,6 +11,7 @@
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["packages/shared/src/*"]
-    }
+    },
+    "allowSyntheticDefaultImports": true
   }
 }
