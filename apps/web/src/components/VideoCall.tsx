@@ -8,9 +8,9 @@ const rtcConfig: RTCConfiguration = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 };
 
-type Props = { room: string };
+type Props = { room: string; initialStream?: MediaStream };
 
-export default function VideoCall({ room }: Props) {
+export default function VideoCall({ room, initialStream }: Props) {
   const [joined, setJoined] = useState(false);
   const [makingOffer, setMakingOffer] = useState(false);
   const [connectionState, setConnectionState] = useState('disconnected');
@@ -79,7 +79,8 @@ export default function VideoCall({ room }: Props) {
   const startLocal = useCallback(async () => {
     if (localStreamRef.current) return localStreamRef.current;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream =
+        initialStream ?? (await navigator.mediaDevices.getUserMedia({ video: true, audio: true }));
       localStreamRef.current = stream;
       if (localVideoRef.current) localVideoRef.current.srcObject = stream;
       return stream;
@@ -88,7 +89,7 @@ export default function VideoCall({ room }: Props) {
       setError('Failed to access camera or microphone.');
       throw e;
     }
-  }, []);
+  }, [initialStream]);
 
   // Initialize signaling once (after helpers are defined)
   useEffect(() => {

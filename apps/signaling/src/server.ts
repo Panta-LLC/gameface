@@ -128,6 +128,13 @@ export function createSignalingServer(httpServer: Server) {
           broadcastToRoom(room, { type: 'game-selected', game: data.game });
           break;
         }
+        case 'select-activity': {
+          const room = socketRoom.get(ws);
+          if (!room) return console.warn('select-activity without room');
+          if (!data.activity) return console.warn('select-activity missing activity');
+          broadcastToRoom(room, { type: 'activity-selected', activity: data.activity });
+          break;
+        }
         case 'offer': {
           const room = socketRoom.get(ws);
           if (!room) return console.warn('offer without room');
