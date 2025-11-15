@@ -27,6 +27,43 @@ export function createSignalingServer(httpServer: Server) {
   const wss = new WebSocketServer({ server: httpServer });
   console.log('WebSocketServer created');
 
+  // In-memory room management
+  const rooms = new Map<string, Set<WebSocket>>();
+  const socketRoom = new WeakMap<WebSocket, string>();
+
+  const joinRoom = (ws: WebSocket, room: string) => {
+    const set = rooms.get(room) || new Set<WebSocket>();
+    set.add(ws);
+    rooms.set(room, set);
+    socketRoom.set(ws, room);
+    console.log(`[signaling] socket joined room ${room}. Size=${set.size}`);
+  };
+
+  const leaveRoom = (ws: WebSocket) => {
+    const room = socketRoom.get(ws);
+    if (!room) return;
+    const set = rooms.get(room);
+    if (set) {
+      set.delete(ws);
+      if (set.size === 0) {
+        rooms.delete(room);
+      }
+    }
+    socketRoom.delete(ws);
+    console.log(`[signaling] socket left room ${room}. Size=${rooms.get(room)?.size ?? 0}`);
+  };
+
+  const broadcastToRoom = (room: string, payload: any, exclude?: WebSocket) => {
+    const set = rooms.get(room);
+    if (!set) return;
+    const text = JSON.stringify(payload);
+    set.forEach((client) => {
+      if (client !== exclude && client.readyState === WebSocket.OPEN) {
+        client.send(text);
+      }
+    });
+  };
+
   // WebRTC Signaling Events
   wss.on('connection', (ws: WebSocket) => {
     console.log('Client connected');
@@ -43,26 +80,40 @@ export function createSignalingServer(httpServer: Server) {
       }
 
       switch (data.type) {
-        case 'join':
-          console.log('Handling join event');
-          handleJoin(ws, data);
+        case 'join': {
+          const room: string = data.room;
+          if (!room) {
+            console.warn('join missing room');
+            return;
+          }
+          joinRoom(ws, room);
+          broadcastToRoom(room, { type: 'peer-joined' }, ws);
           break;
-        case 'offer':
-          console.log('Handling offer event');
-          handleOffer(ws, data);
+        }
+        case 'offer': {
+          const room = socketRoom.get(ws);
+          if (!room) return console.warn('offer without room');
+          broadcastToRoom(room, { type: 'offer', sdp: data.sdp }, ws);
           break;
-        case 'answer':
-          console.log('Handling answer event');
-          handleAnswer(ws, data);
+        }
+        case 'answer': {
+          const room = socketRoom.get(ws);
+          if (!room) return console.warn('answer without room');
+          broadcastToRoom(room, { type: 'answer', sdp: data.sdp }, ws);
           break;
-        case 'candidate':
-          console.log('Handling candidate event');
-          handleCandidate(ws, data);
+        }
+        case 'candidate': {
+          const room = socketRoom.get(ws);
+          if (!room) return console.warn('candidate without room');
+          broadcastToRoom(room, { type: 'candidate', candidate: data.candidate }, ws);
           break;
-        case 'leave':
-          console.log('Handling leave event');
-          handleLeave(ws, data);
+        }
+        case 'leave': {
+          const prev = socketRoom.get(ws);
+          leaveRoom(ws);
+          if (prev) broadcastToRoom(prev, { type: 'peer-left' }, ws);
           break;
+        }
         case 'GAME_SELECTION':
           console.log('Handling GAME_SELECTION event:', data);
           redisPubSub.publish('global', data);
@@ -74,6 +125,9 @@ export function createSignalingServer(httpServer: Server) {
 
     ws.on('close', () => {
       console.log('Client disconnected');
+      const prev = socketRoom.get(ws);
+      leaveRoom(ws);
+      if (prev) broadcastToRoom(prev, { type: 'peer-left' }, ws);
     });
   });
 
@@ -93,28 +147,4 @@ export function createSignalingServer(httpServer: Server) {
   return { wss };
 }
 
-// Helper functions for signaling events
-function handleJoin(ws: WebSocket, data: { room: string }) {
-  console.log(`User joined room: ${data.room}`);
-  // ...implementation...
-}
-
-function handleOffer(ws: WebSocket, data: { from: string; to: string; sdp: string }) {
-  console.log(`Offer from ${data.from} to ${data.to}`);
-  // ...implementation...
-}
-
-function handleAnswer(ws: WebSocket, data: { from: string; to: string; sdp: string }) {
-  console.log(`Answer from ${data.from} to ${data.to}`);
-  // ...implementation...
-}
-
-function handleCandidate(ws: WebSocket, data: { from: string; to: string; candidate: string }) {
-  console.log(`Candidate from ${data.from} to ${data.to}`);
-  // ...implementation...
-}
-
-function handleLeave(ws: WebSocket, data: { room: string }) {
-  console.log(`User left room: ${data.room}`);
-  // ...implementation...
-}
+// Removed legacy helpers; room logic now inlined above

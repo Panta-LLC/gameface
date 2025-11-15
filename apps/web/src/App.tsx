@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import GameSelection from './components/GameSelection';
+import VideoCall from './components/VideoCall';
 import SignalingClient from './webrtc/SignalingClient';
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
       <h1>Gameface Web</h1>
       <p>Welcome to the Gameface frontend.</p>
       <GameSelection />
+      <VideoCall />
     </div>
   );
 }
