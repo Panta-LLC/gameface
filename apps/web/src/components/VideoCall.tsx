@@ -4,15 +4,17 @@ import SignalingClient from '../webrtc/SignalingClient';
 const SIGNALING_URL = 'ws://localhost:3001';
 
 const rtcConfig: RTCConfiguration = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-  ],
+  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 };
 
 export default function VideoCall() {
   const [room, setRoom] = useState('room1');
   const [joined, setJoined] = useState(false);
   const [makingOffer, setMakingOffer] = useState(false);
+  const [connectionState, setConnectionState] = useState('disconnected');
+  const [isMuted, setIsMuted] = useState(false);
+  const [isCameraOff, setIsCameraOff] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -26,7 +28,6 @@ export default function VideoCall() {
     signalingRef.current = signaling;
 
     signaling.onMessage(async (msg) => {
-      // console.log('[signaling] msg', msg);
       if (!pcRef.current) return;
       const pc = pcRef.current;
 
@@ -49,17 +50,10 @@ export default function VideoCall() {
             }
             break;
           }
-          case 'peer-joined': {
-            // Optionally, auto-start as caller if we are already joined
-            break;
-          }
-          case 'peer-left': {
-            // remote left; keep simple for now
-            break;
-          }
         }
       } catch (e) {
         console.error('Error handling signaling message', e);
+        setError('Failed to handle signaling message.');
       }
     });
 
@@ -79,6 +73,10 @@ export default function VideoCall() {
       }
     };
 
+    pc.onconnectionstatechange = () => {
+      setConnectionState(pc.connectionState);
+    };
+
     pc.ontrack = (e) => {
       const [stream] = e.streams;
       if (remoteVideoRef.current) {
@@ -91,11 +89,35 @@ export default function VideoCall() {
 
   const startLocal = useCallback(async () => {
     if (localStreamRef.current) return localStreamRef.current;
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    localStreamRef.current = stream;
-    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-    return stream;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localStreamRef.current = stream;
+      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+      return stream;
+    } catch (e) {
+      console.error('Failed to access local media', e);
+      setError('Failed to access camera or microphone.');
+      throw e;
+    }
   }, []);
+
+  const toggleMute = () => {
+    if (!localStreamRef.current) return;
+    const audioTrack = localStreamRef.current.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = !audioTrack.enabled;
+      setIsMuted(!audioTrack.enabled);
+    }
+  };
+
+  const toggleCamera = () => {
+    if (!localStreamRef.current) return;
+    const videoTrack = localStreamRef.current.getVideoTracks()[0];
+    if (videoTrack) {
+      videoTrack.enabled = !videoTrack.enabled;
+      setIsCameraOff(!videoTrack.enabled);
+    }
+  };
 
   const join = useCallback(async () => {
     if (!signalingRef.current) return;
@@ -106,27 +128,15 @@ export default function VideoCall() {
     setJoined(true);
   }, [ensurePC, room, startLocal]);
 
-  const startCall = useCallback(async () => {
-    const pc = ensurePC();
-    try {
-      setMakingOffer(true);
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      signalingRef.current?.sendMessage({ type: 'offer', sdp: pc.localDescription });
-    } catch (e) {
-      console.error('Failed to start call', e);
-    } finally {
-      setMakingOffer(false);
-    }
-  }, [ensurePC]);
-
   const leave = useCallback(() => {
     setJoined(false);
     signalingRef.current?.sendMessage({ type: 'leave' });
 
     if (pcRef.current) {
       pcRef.current.getSenders().forEach((s) => {
-        try { s.track?.stop(); } catch {}
+        try {
+          s.track?.stop();
+        } catch {}
       });
       pcRef.current.close();
       pcRef.current = null;
@@ -137,32 +147,51 @@ export default function VideoCall() {
       localStreamRef.current.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
     }
+    setConnectionState('disconnected');
   }, []);
 
   return (
     <div style={{ marginTop: 24 }}>
       <h2>Video Call</h2>
+      {error && <div style={{ color: 'red' }}>{error}</div>}
+      <div>Connection State: {connectionState}</div>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <label>
           Room:
-          <input
-            value={room}
-            onChange={(e) => setRoom(e.target.value)}
-            style={{ marginLeft: 8 }}
-          />
+          <input value={room} onChange={(e) => setRoom(e.target.value)} style={{ marginLeft: 8 }} />
         </label>
-        <button onClick={join} disabled={joined}>Join</button>
-        <button onClick={startCall} disabled={!joined || makingOffer}>Start Call</button>
-        <button onClick={leave} disabled={!joined}>Leave</button>
+        <button onClick={join} disabled={joined}>
+          Join
+        </button>
+        <button onClick={leave} disabled={!joined}>
+          Leave
+        </button>
+        <button onClick={toggleMute} disabled={!joined}>
+          {isMuted ? 'Unmute' : 'Mute'}
+        </button>
+        <button onClick={toggleCamera} disabled={!joined}>
+          {isCameraOff ? 'Turn Camera On' : 'Turn Camera Off'}
+        </button>
       </div>
       <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
         <div>
           <div>Local</div>
-          <video ref={localVideoRef} autoPlay playsInline muted style={{ width: 240, background: '#000' }} />
+          <video
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{ width: 240, background: '#000' }}
+          />
         </div>
         <div>
           <div>Remote</div>
-          <video ref={remoteVideoRef} autoPlay playsInline style={{ width: 240, background: '#000' }} />
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            style={{ width: 240, background: '#000' }}
+          />
         </div>
       </div>
     </div>
