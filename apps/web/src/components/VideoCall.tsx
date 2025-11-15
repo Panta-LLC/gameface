@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SignalingClient from '../webrtc/SignalingClient';
+import './VideoCall.css';
 
 const SIGNALING_URL = 'ws://localhost:3001';
 
@@ -17,10 +18,11 @@ export default function VideoCall() {
   const [error, setError] = useState<string | null>(null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const signalingRef = useRef<SignalingClient | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
 
   // Initialize signaling once (defined later, moved to avoid use-before-assign lint)
 
@@ -60,9 +62,14 @@ export default function VideoCall() {
 
     pc.ontrack = (e) => {
       const [stream] = e.streams;
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = stream;
-      }
+      // Track stream and bind to element if already mounted
+      setRemoteStreams((prev) => {
+        if (prev[stream.id]) return prev;
+        // If a video element already exists for this id, attach immediately
+        const el = remoteVideoRefs.current[stream.id];
+        if (el && el.srcObject !== stream) el.srcObject = stream;
+        return { ...prev, [stream.id]: stream };
+      });
     };
 
     return pc;
@@ -174,7 +181,11 @@ export default function VideoCall() {
       pcRef.current = null;
     }
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    // Clear remote refs and streams
+    Object.values(remoteVideoRefs.current).forEach((el) => {
+      if (el) el.srcObject = null;
+    });
+    setRemoteStreams({});
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
@@ -183,49 +194,68 @@ export default function VideoCall() {
     setMakingOffer(false);
   }, []);
 
+  const remoteStreamEntries = useMemo(() => Object.entries(remoteStreams), [remoteStreams]);
+
+  // Ensure streams are attached to DOM elements whenever either side changes
+  useEffect(() => {
+    for (const [id, stream] of Object.entries(remoteStreams)) {
+      const el = remoteVideoRefs.current[id];
+      if (el && el.srcObject !== stream) {
+        el.srcObject = stream;
+      }
+    }
+  }, [remoteStreams]);
+
   return (
-    <div style={{ marginTop: 24 }}>
-      <h2>Video Call</h2>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      <div>Connection State: {connectionState}</div>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        <label>
-          Room:
-          <input value={room} onChange={(e) => setRoom(e.target.value)} style={{ marginLeft: 8 }} />
-        </label>
-        <button onClick={join} disabled={joined}>
-          Connect
-        </button>
-        <button onClick={leave} disabled={!joined}>
-          Leave
-        </button>
-        <button onClick={toggleMute} disabled={!joined}>
-          {isMuted ? 'Unmute' : 'Mute'}
-        </button>
-        <button onClick={toggleCamera} disabled={!joined}>
-          {isCameraOff ? 'Turn Camera On' : 'Turn Camera Off'}
-        </button>
+    <div className="vc-container">
+      <div className="vc-controls">
+        <div>Connection: {connectionState}</div>
+        {error && <div className="vc-error">{error}</div>}
+        <div className="vc-controls-row">
+          <label>
+            Room:
+            <input value={room} onChange={(e) => setRoom(e.target.value)} />
+          </label>
+          <button onClick={join} disabled={joined}>
+            Connect
+          </button>
+          <button onClick={leave} disabled={!joined}>
+            Leave
+          </button>
+          <button onClick={toggleMute} disabled={!joined}>
+            {isMuted ? 'Unmute' : 'Mute'}
+          </button>
+          <button onClick={toggleCamera} disabled={!joined}>
+            {isCameraOff ? 'Camera On' : 'Camera Off'}
+          </button>
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-        <div>
-          <div>Local</div>
-          <video
-            ref={localVideoRef}
-            autoPlay
-            playsInline
-            muted
-            style={{ width: 240, background: '#000' }}
-          />
-        </div>
-        <div>
-          <div>Remote</div>
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            style={{ width: 240, background: '#000' }}
-          />
-        </div>
+
+      {/* Remote videos across the top */}
+      <div className="vc-remote-strip">
+        {remoteStreamEntries.length === 0 && (
+          <div className="vc-remote-placeholder">Waiting for peers…</div>
+        )}
+        {remoteStreamEntries.map(([id]) => (
+          <div className="vc-remote-tile" key={id}>
+            <video
+              ref={(el) => {
+                remoteVideoRefs.current[id] = el;
+                const stream = remoteStreams[id];
+                if (el && stream && el.srcObject !== stream) {
+                  el.srcObject = stream;
+                }
+              }}
+              autoPlay
+              playsInline
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Local video pinned bottom-left */}
+      <div className="vc-local-pin">
+        <video ref={localVideoRef} autoPlay playsInline muted />
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ const games = [
 const GameSelection: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState<number | null>(null);
   const [signalingClient, setSignalingClient] = useState<SignalingClient | null>(null);
+  const [peerStreams, setPeerStreams] = useState<MediaStream[]>([]);
 
   useEffect(() => {
     console.log('Initializing WebSocket connection to signaling server...');
@@ -23,6 +24,9 @@ const GameSelection: React.FC = () => {
         console.log('Processing GAME_SELECTION event:', message);
         setSelectedGame(message.gameId);
         console.log('Updated selected game to:', message.gameId);
+      } else if (message.type === 'PEER_STREAM') {
+        console.log('Adding peer stream:', message.stream);
+        setPeerStreams((prev) => [...prev, message.stream]);
       } else {
         console.log('Unhandled message type:', message.type);
       }
@@ -69,6 +73,19 @@ const GameSelection: React.FC = () => {
           <p>{games.find((game) => game.id === selectedGame)?.name}</p>
         </div>
       )}
+      <div className="peer-video-layout">
+        <h2>Peer Video Layout</h2>
+        <div className="video-grid">
+          {peerStreams.map((stream, index) => (
+            <video
+              key={index}
+              autoPlay
+              playsInline
+              ref={(video) => video && (video.srcObject = stream)}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

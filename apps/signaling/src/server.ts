@@ -64,6 +64,33 @@ export function createSignalingServer(httpServer: Server) {
     });
   };
 
+  const gameSelection = new Map<string, string>();
+  const readiness = new Map<string, Set<WebSocket>>();
+
+  const setGameForRoom = (room: string, game: string) => {
+    gameSelection.set(room, game);
+    readiness.set(room, new Set());
+  };
+
+  const markReady = (ws: WebSocket) => {
+    const room = socketRoom.get(ws);
+    if (!room) return;
+    const readySet = readiness.get(room);
+    if (readySet) {
+      readySet.add(ws);
+      broadcastToRoom(room, { type: 'ready', user: ws }, ws);
+      if (readySet.size === rooms.get(room)?.size) {
+        broadcastToRoom(room, { type: 'all-ready' });
+      }
+    }
+  };
+
+  const startGame = (room: string) => {
+    const game = gameSelection.get(room);
+    if (!game) return console.warn('start game without game selection');
+    broadcastToRoom(room, { type: 'start-game', game });
+  };
+
   // WebRTC Signaling Events
   wss.on('connection', (ws: WebSocket) => {
     console.log('Client connected');
@@ -111,40 +138,29 @@ export function createSignalingServer(httpServer: Server) {
         case 'leave': {
           const prev = socketRoom.get(ws);
           leaveRoom(ws);
-          if (prev) broadcastToRoom(prev, { type: 'peer-left' }, ws);
+          if (prev) {
+            broadcastToRoom(prev, { type: 'peer-left' });
+          }
           break;
         }
-        case 'GAME_SELECTION':
-          console.log('Handling GAME_SELECTION event:', data);
-          redisPubSub.publish('global', data);
+        case 'ready': {
+          markReady(ws);
           break;
-        default:
-          console.error('Unknown message type:', data.type);
+        }
+        case 'start-game': {
+          const room = socketRoom.get(ws);
+          if (!room) return console.warn('start-game without room');
+          startGame(room);
+          break;
+        }
       }
     });
 
     ws.on('close', () => {
       console.log('Client disconnected');
-      const prev = socketRoom.get(ws);
       leaveRoom(ws);
-      if (prev) broadcastToRoom(prev, { type: 'peer-left' }, ws);
     });
   });
 
-  (async () => {
-    await redisPubSub.subscribe('global', (message: object) => {
-      console.log('Received Redis message on channel "global":', message);
-      console.log('Broadcasting message to all clients:', message);
-      wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          console.log('Sending message to client:', message);
-          client.send(JSON.stringify(message));
-        }
-      });
-    });
-  })();
-
-  return { wss };
+  return wss;
 }
-
-// Removed legacy helpers; room logic now inlined above
