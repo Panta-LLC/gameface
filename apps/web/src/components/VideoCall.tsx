@@ -22,45 +22,7 @@ export default function VideoCall() {
   const signalingRef = useRef<SignalingClient | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
 
-  // Initialize signaling once
-  useEffect(() => {
-    const signaling = new SignalingClient(SIGNALING_URL);
-    signalingRef.current = signaling;
-
-    signaling.onMessage(async (msg) => {
-      if (!pcRef.current) return;
-      const pc = pcRef.current;
-
-      try {
-        switch (msg.type) {
-          case 'offer': {
-            await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            signalingRef.current?.sendMessage({ type: 'answer', sdp: pc.localDescription });
-            break;
-          }
-          case 'answer': {
-            await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-            break;
-          }
-          case 'candidate': {
-            if (msg.candidate) {
-              await pc.addIceCandidate(msg.candidate);
-            }
-            break;
-          }
-        }
-      } catch (e) {
-        console.error('Error handling signaling message', e);
-        setError('Failed to handle signaling message.');
-      }
-    });
-
-    return () => {
-      signaling.close();
-    };
-  }, []);
+  // Initialize signaling once (defined later, moved to avoid use-before-assign lint)
 
   const ensurePC = useCallback(() => {
     if (pcRef.current) return pcRef.current;
@@ -69,12 +31,31 @@ export default function VideoCall() {
 
     pc.onicecandidate = (e) => {
       if (e.candidate) {
-        signalingRef.current?.sendMessage({ type: 'candidate', candidate: e.candidate });
+        const payload = { type: 'candidate', candidate: e.candidate };
+        console.log('[Signaling][send]', payload);
+        signalingRef.current?.sendMessage(payload);
       }
     };
 
     pc.onconnectionstatechange = () => {
       setConnectionState(pc.connectionState);
+    };
+
+    // Drive initial offer creation when tracks are added
+    pc.onnegotiationneeded = async () => {
+      try {
+        setMakingOffer(true);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        const payload = { type: 'offer', sdp: pc.localDescription };
+        console.log('[Signaling][send]', payload);
+        signalingRef.current?.sendMessage(payload);
+      } catch (e) {
+        console.error('Negotiation failed', e);
+        setError('Negotiation failed while creating an offer.');
+      } finally {
+        setMakingOffer(false);
+      }
     };
 
     pc.ontrack = (e) => {
@@ -101,6 +82,54 @@ export default function VideoCall() {
     }
   }, []);
 
+  // Initialize signaling once (after helpers are defined)
+  useEffect(() => {
+    const signaling = new SignalingClient(SIGNALING_URL);
+    signalingRef.current = signaling;
+
+    signaling.onMessage(async (msg) => {
+      console.log('[Signaling][recv]', msg);
+      // Ensure a peer connection exists before handling messages
+      const pc = pcRef.current ?? ensurePC();
+
+      try {
+        switch (msg.type) {
+          case 'offer': {
+            // Prepare local if not already started
+            if (!localStreamRef.current) {
+              const stream = await startLocal();
+              stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+            }
+            await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            signalingRef.current?.sendMessage({ type: 'answer', sdp: pc.localDescription });
+            break;
+          }
+          case 'answer': {
+            await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+            break;
+          }
+          case 'candidate': {
+            if (msg.candidate) {
+              await pc.addIceCandidate(msg.candidate);
+            }
+            break;
+          }
+        }
+      } catch (e) {
+        console.error('Error handling signaling message', e);
+        setError('Failed to handle signaling message.');
+      }
+    });
+
+    return () => {
+      signaling.close();
+    };
+    // Create PC early so we don't miss early offers and wire events once
+    ensurePC();
+  }, [ensurePC, startLocal]);
+
   const toggleMute = () => {
     if (!localStreamRef.current) return;
     const audioTrack = localStreamRef.current.getAudioTracks()[0];
@@ -122,10 +151,13 @@ export default function VideoCall() {
   const join = useCallback(async () => {
     if (!signalingRef.current) return;
     const pc = ensurePC();
-    const stream = await startLocal();
-    stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+    // Join the room BEFORE adding tracks to avoid offers being sent before the server maps the socket to the room
+    console.log('[Signaling][send] join', { room });
     signalingRef.current.sendMessage({ type: 'join', room });
     setJoined(true);
+    setConnectionState('connecting');
+    const stream = await startLocal();
+    stream.getTracks().forEach((t) => pc.addTrack(t, stream));
   }, [ensurePC, room, startLocal]);
 
   const leave = useCallback(() => {
@@ -148,6 +180,7 @@ export default function VideoCall() {
       localStreamRef.current = null;
     }
     setConnectionState('disconnected');
+    setMakingOffer(false);
   }, []);
 
   return (
@@ -161,7 +194,7 @@ export default function VideoCall() {
           <input value={room} onChange={(e) => setRoom(e.target.value)} style={{ marginLeft: 8 }} />
         </label>
         <button onClick={join} disabled={joined}>
-          Join
+          Connect
         </button>
         <button onClick={leave} disabled={!joined}>
           Leave
