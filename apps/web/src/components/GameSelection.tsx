@@ -8,27 +8,41 @@ const games = [
   { id: 3, name: 'Trivia', description: 'Test your knowledge with trivia questions.' },
 ];
 
-const GameSelection: React.FC = () => {
+type Props = { room: string };
+
+const GameSelection: React.FC<Props> = ({ room }) => {
   const [selectedGame, setSelectedGame] = useState<number | null>(null);
   const [signalingClient, setSignalingClient] = useState<SignalingClient | null>(null);
-  const [peerStreams, setPeerStreams] = useState<MediaStream[]>([]);
+  const [allReady, setAllReady] = useState(false);
+  const [iAmReady, setIAmReady] = useState(false);
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
     console.log('Initializing WebSocket connection to signaling server...');
-    const client = new SignalingClient('ws://localhost:3001'); // Updated to use the signaling server
+    const client = new SignalingClient('ws://localhost:3001'); // signaling server
     setSignalingClient(client);
+
+    client.onOpen(() => {
+      client.sendMessage({ type: 'join', room });
+    });
 
     client.onMessage((message) => {
       console.log('Message received from server:', message);
-      if (message.type === 'GAME_SELECTION') {
-        console.log('Processing GAME_SELECTION event:', message);
-        setSelectedGame(message.gameId);
-        console.log('Updated selected game to:', message.gameId);
-      } else if (message.type === 'PEER_STREAM') {
-        console.log('Adding peer stream:', message.stream);
-        setPeerStreams((prev) => [...prev, message.stream]);
-      } else {
-        console.log('Unhandled message type:', message.type);
+      switch (message.type) {
+        case 'game-selected':
+          setSelectedGame(Number(message.game));
+          setAllReady(false);
+          setIAmReady(false);
+          setStarted(false);
+          break;
+        case 'all-ready':
+          setAllReady(true);
+          break;
+        case 'start-game':
+          setStarted(true);
+          break;
+        default:
+          break;
       }
     });
 
@@ -46,10 +60,21 @@ const GameSelection: React.FC = () => {
     setSelectedGame(gameId);
     console.log(`Game selected: ${gameId}`);
     if (signalingClient) {
-      const message = { type: 'GAME_SELECTION', gameId };
+      const message = { type: 'select-game', game: String(gameId) };
       console.log('Sending message to server:', message);
       signalingClient.sendMessage(message);
     }
+  };
+
+  const sendReady = () => {
+    if (!signalingClient) return;
+    signalingClient.sendMessage({ type: 'ready' });
+    setIAmReady(true);
+  };
+
+  const startGame = () => {
+    if (!signalingClient) return;
+    signalingClient.sendMessage({ type: 'start-game' });
   };
 
   return (
@@ -67,25 +92,21 @@ const GameSelection: React.FC = () => {
           </li>
         ))}
       </ul>
-      {selectedGame && (
+      {selectedGame && !started && (
         <div className="game-details">
           <h3>Selected Game:</h3>
           <p>{games.find((game) => game.id === selectedGame)?.name}</p>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button disabled={iAmReady} onClick={sendReady}>
+              {iAmReady ? 'Ready ✓' : "I'm Ready"}
+            </button>
+            <button disabled={!allReady} onClick={startGame}>
+              {allReady ? 'Start Game' : 'Waiting for everyone…'}
+            </button>
+          </div>
         </div>
       )}
-      <div className="peer-video-layout">
-        <h2>Peer Video Layout</h2>
-        <div className="video-grid">
-          {peerStreams.map((stream, index) => (
-            <video
-              key={index}
-              autoPlay
-              playsInline
-              ref={(video) => video && (video.srcObject = stream)}
-            />
-          ))}
-        </div>
-      </div>
+      {started && <div className="game-details">Game starting…</div>}
     </div>
   );
 };

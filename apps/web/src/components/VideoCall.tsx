@@ -8,8 +8,9 @@ const rtcConfig: RTCConfiguration = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 };
 
-export default function VideoCall() {
-  const [room, setRoom] = useState('room1');
+type Props = { room: string };
+
+export default function VideoCall({ room }: Props) {
   const [joined, setJoined] = useState(false);
   const [makingOffer, setMakingOffer] = useState(false);
   const [connectionState, setConnectionState] = useState('disconnected');
@@ -212,10 +213,9 @@ export default function VideoCall() {
         <div>Connection: {connectionState}</div>
         {error && <div className="vc-error">{error}</div>}
         <div className="vc-controls-row">
-          <label>
-            Room:
-            <input value={room} onChange={(e) => setRoom(e.target.value)} />
-          </label>
+          <div>
+            <strong>Room:</strong> {room}
+          </div>
           <button onClick={join} disabled={joined}>
             Connect
           </button>

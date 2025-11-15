@@ -30,12 +30,15 @@ export function createSignalingServer(httpServer: Server) {
   // In-memory room management
   const rooms = new Map<string, Set<WebSocket>>();
   const socketRoom = new WeakMap<WebSocket, string>();
+  const socketId = new WeakMap<WebSocket, string>();
+  let nextId = 1;
 
   const joinRoom = (ws: WebSocket, room: string) => {
     const set = rooms.get(room) || new Set<WebSocket>();
     set.add(ws);
     rooms.set(room, set);
     socketRoom.set(ws, room);
+    if (!socketId.get(ws)) socketId.set(ws, String(nextId++));
     console.log(`[signaling] socket joined room ${room}. Size=${set.size}`);
   };
 
@@ -78,7 +81,7 @@ export function createSignalingServer(httpServer: Server) {
     const readySet = readiness.get(room);
     if (readySet) {
       readySet.add(ws);
-      broadcastToRoom(room, { type: 'ready', user: ws }, ws);
+      broadcastToRoom(room, { type: 'ready', id: socketId.get(ws) });
       if (readySet.size === rooms.get(room)?.size) {
         broadcastToRoom(room, { type: 'all-ready' });
       }
@@ -114,7 +117,15 @@ export function createSignalingServer(httpServer: Server) {
             return;
           }
           joinRoom(ws, room);
-          broadcastToRoom(room, { type: 'peer-joined' }, ws);
+          broadcastToRoom(room, { type: 'peer-joined', id: socketId.get(ws) }, ws);
+          break;
+        }
+        case 'select-game': {
+          const room = socketRoom.get(ws);
+          if (!room) return console.warn('select-game without room');
+          if (!data.game) return console.warn('select-game missing game');
+          setGameForRoom(room, data.game);
+          broadcastToRoom(room, { type: 'game-selected', game: data.game });
           break;
         }
         case 'offer': {
@@ -139,7 +150,7 @@ export function createSignalingServer(httpServer: Server) {
           const prev = socketRoom.get(ws);
           leaveRoom(ws);
           if (prev) {
-            broadcastToRoom(prev, { type: 'peer-left' });
+            broadcastToRoom(prev, { type: 'peer-left', id: socketId.get(ws) });
           }
           break;
         }
