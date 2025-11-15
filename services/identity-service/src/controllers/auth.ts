@@ -1,6 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
 import { createClient } from 'redis';
+import jwt from 'jsonwebtoken';
 
 /**
  * Authentication Controllers
@@ -89,7 +90,7 @@ export const logoutHandler = async (req: Request, res: Response) => {
   }
 };
 
-// Handler for session persistence
+// Updated handler for session persistence
 export const sessionPersistenceHandler = async (req: Request, res: Response) => {
   try {
     const token = req.headers.authorization?.split(' ')[1]; // Extract token from Authorization header
@@ -98,17 +99,38 @@ export const sessionPersistenceHandler = async (req: Request, res: Response) => 
       return res.status(400).json({ error: 'No token provided' });
     }
 
-    // Validate the token by checking its existence in Redis
-    const session = await redisClient.get(`session:${token}`);
-    if (!session) {
-      return res.status(401).json({ error: 'Session expired or invalid' });
+    // Validate token signature and claims
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+
+      // Check if the token is revoked
+      const isRevoked = await redisClient.get(`revoked:refresh:${token}`);
+
+      if (isRevoked) {
+        return res.status(401).json({ error: 'Session expired or invalid' });
+      }
+
+      // Update session metadata
+      const sessionKey = `session:${decoded.sub}`;
+      const sessionData = await redisClient.get(sessionKey);
+
+      if (!sessionData) {
+        return res.status(401).json({ error: 'Session not found' });
+      }
+
+      const session = JSON.parse(sessionData);
+      session.lastSeenAt = new Date().toISOString();
+      await redisClient.set(sessionKey, JSON.stringify(session));
+
+      // Extend session lifetime
+      await redisClient.expire(sessionKey, 3600); // Extend session TTL to 1 hour
+
+      res.status(200).json({ message: 'Session is active', session });
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid token' });
     }
-
-    // Optionally extend the session lifetime
-    await redisClient.expire(`session:${token}`, 3600); // Extend by 1 hour
-
-    res.status(200).json({ message: 'Session is active' });
   } catch (error) {
+    console.error('Error in session persistence handler:', error);
     res.status(500).json({ error: 'An error occurred while validating the session' });
   }
 };
