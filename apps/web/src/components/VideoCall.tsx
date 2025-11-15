@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SignalingClient from '../webrtc/SignalingClient';
+import { Button } from '../components/ui/button';
 import './VideoCall.css';
 
 const SIGNALING_URL = 'ws://localhost:3001';
@@ -8,9 +9,9 @@ const rtcConfig: RTCConfiguration = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 };
 
-type Props = { room: string; initialStream?: MediaStream };
+type Props = { room: string; initialStream?: MediaStream; localStream?: MediaStream };
 
-export default function VideoCall({ room, initialStream }: Props) {
+export default function VideoCall({ room, initialStream, localStream }: Props) {
   const [joined, setJoined] = useState(false);
   const [makingOffer, setMakingOffer] = useState(false);
   const [connectionState, setConnectionState] = useState('disconnected');
@@ -139,6 +140,12 @@ export default function VideoCall({ room, initialStream }: Props) {
     ensurePC();
   }, [ensurePC, startLocal]);
 
+  useEffect(() => {
+    startLocal().catch((e) => {
+      console.error('Failed to initialize local stream on mount', e);
+    });
+  }, [startLocal]);
+
   const toggleMute = () => {
     if (!localStreamRef.current) return;
     const audioTrack = localStreamRef.current.getAudioTracks()[0];
@@ -149,12 +156,18 @@ export default function VideoCall({ room, initialStream }: Props) {
   };
 
   const toggleCamera = () => {
-    if (!localStreamRef.current) return;
-    const videoTrack = localStreamRef.current.getVideoTracks()[0];
-    if (videoTrack) {
-      videoTrack.enabled = !videoTrack.enabled;
-      setIsCameraOff(!videoTrack.enabled);
+    if (!localStreamRef.current) {
+      console.error('toggleCamera: No local stream available');
+      return;
     }
+    const videoTrack = localStreamRef.current.getVideoTracks()[0];
+    if (!videoTrack) {
+      console.error('toggleCamera: No video track available');
+      return;
+    }
+    console.log('toggleCamera: Toggling video track. Current state:', videoTrack.enabled);
+    videoTrack.enabled = !videoTrack.enabled;
+    setIsCameraOff(!videoTrack.enabled);
   };
 
   const join = useCallback(async () => {
@@ -255,9 +268,29 @@ export default function VideoCall({ room, initialStream }: Props) {
       </div>
 
       {/* Local video pinned bottom-left */}
-      <div className="vc-local-pin">
-        <video ref={localVideoRef} autoPlay playsInline muted />
-      </div>
+      {localStream && (
+        <footer className="bg-white border-t border-gray-200 p-4 fixed bottom-0 left-0 right-0 flex items-center justify-between">
+          <video
+            className="w-24 h-24 bg-black"
+            autoPlay
+            muted
+            playsInline
+            ref={(video) => {
+              if (video && localStream) {
+                video.srcObject = localStream;
+              }
+            }}
+          />
+          <div className="flex gap-2">
+            <Button variant="default" onClick={() => setIsMuted(!isMuted)}>
+              {isMuted ? 'Unmute' : 'Mute'}
+            </Button>
+            <Button variant="default" onClick={toggleCamera}>
+              {isCameraOff ? 'Turn Camera On' : 'Turn Camera Off'}
+            </Button>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
