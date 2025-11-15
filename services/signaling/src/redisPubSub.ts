@@ -20,8 +20,9 @@ export class RedisPubSub {
   async publish(channel: string, message: object) {
     try {
       const payload = JSON.stringify(message);
+      console.log(`Publishing message to channel ${channel}:`, payload);
       await this.publisher.publish(channel, payload);
-      console.log(`Message published to ${channel}:`, payload);
+      console.log(`Message successfully published to ${channel}`);
     } catch (error) {
       console.error('Error publishing message:', error);
     }
@@ -29,15 +30,17 @@ export class RedisPubSub {
 
   async subscribe(channel: string, handler: (message: object) => void) {
     try {
+      console.log(`Subscribing to channel ${channel}`);
       await this.subscriber.subscribe(channel, (message) => {
         try {
+          console.log(`Message received on channel ${channel}:`, message);
           const parsedMessage = JSON.parse(message);
           handler(parsedMessage);
         } catch (error) {
           console.error('Error parsing message:', error);
         }
       });
-      console.log(`Subscribed to ${channel}`);
+      console.log(`Successfully subscribed to ${channel}`);
     } catch (error) {
       console.error('Error subscribing to channel:', error);
     }
@@ -48,3 +51,5 @@ export class RedisPubSub {
     await this.subscriber.disconnect();
   }
 }
+
+export default RedisPubSub;

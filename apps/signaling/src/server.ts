@@ -1,9 +1,22 @@
 import { WebSocketServer, WebSocket } from 'ws'; // Unified import for WebSocketServer and WebSocket
 import type { RawData } from 'ws';
 import type { Server } from 'http';
-import { RedisPubSub } from '../../../services/signaling/src/redisPubSub';
+import * as RedisPubSubModule from '../../../services/signaling/src/redisPubSub';
 
-const redisPubSub = new RedisPubSub();
+// Debug module shape to handle ESM/CJS interop reliably
+// eslint-disable-next-line no-console
+console.log('[signaling] RedisPubSubModule keys:', Object.keys(RedisPubSubModule));
+// Prefer named export, then default, else fall back to value itself if it's a function
+const RedisExport: any =
+  (RedisPubSubModule as any).RedisPubSub ||
+  ((RedisPubSubModule as any).default && (RedisPubSubModule as any).default.RedisPubSub) ||
+  (RedisPubSubModule as any).default ||
+  RedisPubSubModule;
+console.log('[signaling] RedisExport typeof:', typeof RedisExport);
+if (typeof RedisExport === 'object') {
+  console.log('[signaling] RedisExport object keys:', Object.keys(RedisExport));
+}
+const redisPubSub = new (RedisExport as any)();
 
 (async () => {
   await redisPubSub.connect();
@@ -18,29 +31,41 @@ export function createSignalingServer(httpServer: Server) {
   wss.on('connection', (ws: WebSocket) => {
     console.log('Client connected');
 
-    ws.on('message', (message: string) => {
-      const data = JSON.parse(message);
+    ws.on('message', (message: RawData) => {
+      const text = typeof message === 'string' ? message : message.toString();
+      console.log('Received message:', text);
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('Failed to parse incoming message as JSON:', e);
+        return;
+      }
 
       switch (data.type) {
         case 'join':
-          // Notify peers about the new user
+          console.log('Handling join event');
           handleJoin(ws, data);
           break;
         case 'offer':
-          // Relay offer to the target peer
+          console.log('Handling offer event');
           handleOffer(ws, data);
           break;
         case 'answer':
-          // Relay answer to the target peer
+          console.log('Handling answer event');
           handleAnswer(ws, data);
           break;
         case 'candidate':
-          // Relay ICE candidate to the target peer
+          console.log('Handling candidate event');
           handleCandidate(ws, data);
           break;
         case 'leave':
-          // Notify peers about the user leaving
+          console.log('Handling leave event');
           handleLeave(ws, data);
+          break;
+        case 'GAME_SELECTION':
+          console.log('Handling GAME_SELECTION event:', data);
+          redisPubSub.publish('global', data);
           break;
         default:
           console.error('Unknown message type:', data.type);
@@ -49,15 +74,16 @@ export function createSignalingServer(httpServer: Server) {
 
     ws.on('close', () => {
       console.log('Client disconnected');
-      // Handle cleanup if necessary
     });
   });
 
   (async () => {
     await redisPubSub.subscribe('global', (message: object) => {
+      console.log('Received Redis message on channel "global":', message);
       console.log('Broadcasting message to all clients:', message);
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
+          console.log('Sending message to client:', message);
           client.send(JSON.stringify(message));
         }
       });
@@ -69,7 +95,6 @@ export function createSignalingServer(httpServer: Server) {
 
 // Helper functions for signaling events
 function handleJoin(ws: WebSocket, data: { room: string }) {
-  // Notify other peers in the room
   console.log(`User joined room: ${data.room}`);
   // ...implementation...
 }

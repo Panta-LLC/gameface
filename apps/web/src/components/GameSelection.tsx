@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './GameSelection.css';
+import SignalingClient from '../webrtc/SignalingClient';
 
 const games = [
   { id: 1, name: 'Chess', description: 'A classic strategy game.' },
@@ -9,48 +10,41 @@ const games = [
 
 const GameSelection: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState<number | null>(null);
-  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [signalingClient, setSignalingClient] = useState<SignalingClient | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080'); // Replace with your WebSocket server URL
-    setSocket(ws);
+    console.log('Initializing WebSocket connection to signaling server...');
+    const client = new SignalingClient('ws://localhost:3001'); // Updated to use the signaling server
+    setSignalingClient(client);
 
-    ws.onopen = () => {
-      console.log('WebSocket connection established');
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('Message received from server:', data);
-        if (data.type === 'GAME_SELECTION') {
-          setSelectedGame(data.gameId);
-        }
-      } catch (error) {
-        console.error('Error parsing message:', error);
+    client.onMessage((message) => {
+      console.log('Message received from server:', message);
+      if (message.type === 'GAME_SELECTION') {
+        console.log('Processing GAME_SELECTION event:', message);
+        setSelectedGame(message.gameId);
+        console.log('Updated selected game to:', message.gameId);
+      } else {
+        console.log('Unhandled message type:', message.type);
       }
-    };
+    });
 
-    ws.onclose = () => {
-      console.log('WebSocket connection closed');
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
+    client.onDisconnect(() => {
+      console.log('WebSocket connection disconnected.');
+    });
 
     return () => {
-      ws.close();
+      console.log('Closing WebSocket connection...');
+      client.close();
     };
   }, []);
 
   const handleGameSelect = (gameId: number) => {
     setSelectedGame(gameId);
     console.log(`Game selected: ${gameId}`);
-    if (socket) {
-      const message = JSON.stringify({ type: 'GAME_SELECTION', gameId });
+    if (signalingClient) {
+      const message = { type: 'GAME_SELECTION', gameId };
       console.log('Sending message to server:', message);
-      socket.send(message);
+      signalingClient.sendMessage(message);
     }
   };
 
