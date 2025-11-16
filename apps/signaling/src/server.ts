@@ -1,10 +1,12 @@
-import { WebSocketServer, WebSocket } from 'ws'; // Unified import for WebSocketServer and WebSocket
-import type { RawData } from 'ws';
 import type { Server } from 'http';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { RawData } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws'; // Unified import for WebSocketServer and WebSocket
+
 import * as RedisPubSubModule from '../../../services/signaling/src/redisPubSub';
 
 // Debug module shape to handle ESM/CJS interop reliably
-// eslint-disable-next-line no-console
+
 console.log('[signaling] RedisPubSubModule keys:', Object.keys(RedisPubSubModule));
 // Prefer named export, then default, else fall back to value itself if it's a function
 const RedisExport: any =
@@ -48,6 +50,15 @@ export function createSignalingServer(httpServer: Server) {
       set.delete(ws);
       if (set.size === 0) {
         rooms.delete(room);
+        // If the room is empty and the game finished, remove persisted state.
+        try {
+          const s = tables.get(room);
+          if (s && s.status === 'finished') {
+            void redisPubSub.del(`signaling:room:${room}:state`);
+          }
+        } catch (e) {
+          console.error('Failed to clean up persisted room state', e);
+        }
       }
     }
     socketRoom.delete(ws);
@@ -100,6 +111,29 @@ export function createSignalingServer(httpServer: Server) {
     } catch (e) {
       console.error('Failed to publish game-selected', e);
     }
+    // persist canonical room state
+    void persistRoomState(room);
+  };
+
+  // Persist the combined room state (game, activity, card table) to Redis
+  const persistRoomState = async (room: string) => {
+    try {
+      const payload = {
+        game: gameSelection.get(room) ?? null,
+        activity: activitySelection.get(room) ?? null,
+        tableState: tables.get(room) ?? null,
+      };
+      // ensure connection, then set
+      await redisPubSub.connect();
+      const ttl = Number(process.env.SIGNALING_ROOM_TTL_SECONDS) || 60 * 60 * 24; // default 24h
+      if (typeof (redisPubSub as any).setWithTTL === 'function') {
+        await (redisPubSub as any).setWithTTL(`signaling:room:${room}:state`, payload, ttl);
+      } else {
+        await redisPubSub.set(`signaling:room:${room}:state`, payload);
+      }
+    } catch (e) {
+      console.error('Failed to persist room state', e);
+    }
   };
 
   const markReady = (ws: WebSocket) => {
@@ -127,7 +161,7 @@ export function createSignalingServer(httpServer: Server) {
     .connect()
     .then(() => {
       console.log('RedisPubSub connected (server-level)');
-      void redisPubSub.psubscribe('signaling:room:*', (msg: any, channel: string) => {
+      void redisPubSub.psubscribe('signaling:room:*', (msg: any, _channel: string) => {
         try {
           if (!msg || msg.source === instanceId) return; // ignore our own messages
           const { type, room } = msg;
@@ -176,7 +210,8 @@ export function createSignalingServer(httpServer: Server) {
   wss.on('connection', (ws: WebSocket) => {
     console.log('Client connected');
 
-    ws.on('message', (message: RawData) => {
+    // Make the message handler async so we can load persisted room state on join
+    ws.on('message', async (message: RawData) => {
       const text = typeof message === 'string' ? message : message.toString();
       console.log('Received message:', text);
       let data: any;
@@ -197,6 +232,20 @@ export function createSignalingServer(httpServer: Server) {
           joinRoom(ws, room);
           // notify other peers a new peer joined
           broadcastToRoom(room, { type: 'peer-joined', id: socketId.get(ws) }, ws);
+          // If we don't have state in-memory for this room, attempt to load
+          // the persisted room state from Redis so late-joiners (and new
+          // server instances) can recover ongoing games.
+          try {
+            const persisted = await redisPubSub.get(`signaling:room:${room}:state`);
+            if (persisted) {
+              // Restore persisted values into our in-memory maps
+              if (persisted.game) gameSelection.set(room, persisted.game);
+              if (persisted.activity) activitySelection.set(room, persisted.activity);
+              if (persisted.tableState) tables.set(room, persisted.tableState);
+            }
+          } catch (e) {
+            console.error('Failed to load persisted room state for joiner', e);
+          }
 
           // If we have a selected game/activity, send those to the joining socket
           // so late-joiners are fully in sync.
@@ -253,6 +302,8 @@ export function createSignalingServer(httpServer: Server) {
           } catch (e) {
             console.error('Failed to publish activity-selected', e);
           }
+          // persist canonical room state
+          void persistRoomState(room);
           break;
         }
         case 'offer': {
@@ -318,6 +369,8 @@ export function createSignalingServer(httpServer: Server) {
           } catch (e) {
             console.error('Failed to publish cardtable.seat.update', e);
           }
+          // persist canonical room state
+          void persistRoomState(room);
           break;
         }
         case 'cardtable.seat.release': {
@@ -342,6 +395,8 @@ export function createSignalingServer(httpServer: Server) {
           } catch (e) {
             console.error('Failed to publish cardtable.seat.update', e);
           }
+          // persist canonical room state
+          void persistRoomState(room);
           break;
         }
         case 'cardtable.seat.update': {
@@ -375,6 +430,8 @@ export function createSignalingServer(httpServer: Server) {
           } catch (e) {
             console.error('Failed to publish cardtable.seat.update', e);
           }
+          // persist canonical room state
+          void persistRoomState(room);
           break;
         }
         case 'cardtable.start': {
@@ -407,6 +464,8 @@ export function createSignalingServer(httpServer: Server) {
           } catch (e) {
             console.error('Failed to publish cardtable.start', e);
           }
+          // persist canonical room state
+          void persistRoomState(room);
           break;
         }
         default: {

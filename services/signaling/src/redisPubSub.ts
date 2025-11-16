@@ -37,6 +37,49 @@ export class RedisPubSub {
     }
   }
 
+  // Simple key/value helpers so callers can persist arbitrary JSON state
+  async set(key: string, value: object) {
+    try {
+      const payload = JSON.stringify(value);
+      await this.publisher.set(key, payload);
+    } catch (error) {
+      console.error('Error setting key in Redis:', error);
+    }
+  }
+
+  /**
+   * Set a key with an expire in seconds. Uses Redis SET with EX option.
+   */
+  async setWithTTL(key: string, value: object, ttlSeconds: number) {
+    try {
+      const payload = JSON.stringify(value);
+      // node-redis v4 supports set with options { EX: seconds }
+      // @ts-ignore
+      await this.publisher.set(key, payload, { EX: ttlSeconds });
+    } catch (error) {
+      console.error('Error setting key with TTL in Redis:', error);
+    }
+  }
+
+  async get(key: string) {
+    try {
+      const raw = await this.publisher.get(key);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (error) {
+      console.error('Error getting key from Redis:', error);
+      return null;
+    }
+  }
+
+  async del(key: string) {
+    try {
+      await this.publisher.del(key);
+    } catch (error) {
+      console.error('Error deleting key from Redis:', error);
+    }
+  }
+
   async subscribe(channel: string, handler: (message: object) => void) {
     try {
       console.log(`Subscribing to channel ${channel}`);
