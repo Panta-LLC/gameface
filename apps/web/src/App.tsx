@@ -15,10 +15,10 @@ export default function App() {
   const activityApi = useActivitySignaling(room);
 
   return (
-    <div className="font-sans flex flex-col h-screen">
+    <div className="font-sans flex flex-col h-screen bg-gray-200">
       {/* App Bar */}
-      <header className="p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Gameface Web</h1>
+      <header className="p-4 flex justify-between items-center bg-white border-b border-gray-200 mx-6 rounded-b-xl">
+        <h1 className="text-xl font-bold">Gameface</h1>
         {name && (
           <span className="text-sm">
             Logged in as: <strong>{name}</strong>

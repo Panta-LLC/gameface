@@ -35,8 +35,34 @@ export default function LocalVideoModule({
           if (v && localStream) v.srcObject = localStream as any;
         }}
       />
-
       <div className="local-video-actions" role="toolbar" aria-orientation="horizontal">
+        <div>
+          <button
+            className="action-btn mr-2"
+            title={isMuted ? 'Unmute' : 'Mute'}
+            aria-pressed={isMuted}
+            onClick={() => setIsMuted(!isMuted)}
+            disabled={!joined}
+          >
+            <span className="icon-wrap">
+              <MicrophoneIcon className="action-icon" />
+              {isMuted && <XMarkIcon className="icon-overlay" />}
+            </span>
+          </button>
+          <button
+            className="action-btn"
+            title={isCameraOff ? 'Turn camera on' : 'Turn camera off'}
+            aria-pressed={isCameraOff}
+            onClick={toggleCamera}
+            disabled={!joined}
+          >
+            <span className="icon-wrap">
+              <VideoCameraIcon className="action-icon" />
+              {isCameraOff && <XMarkIcon className="icon-overlay" />}
+            </span>
+          </button>
+        </div>
+
         <div className="session-controls">
           {!joined ? (
             <button className="session-btn connect" onClick={() => join()}>
@@ -48,32 +74,6 @@ export default function LocalVideoModule({
             </button>
           )}
         </div>
-
-        <button
-          className="action-btn"
-          title={isMuted ? 'Unmute' : 'Mute'}
-          aria-pressed={isMuted}
-          onClick={() => setIsMuted(!isMuted)}
-          disabled={!joined}
-        >
-          <span className="icon-wrap">
-            <MicrophoneIcon className="action-icon" />
-            {isMuted && <XMarkIcon className="icon-overlay" />}
-          </span>
-        </button>
-
-        <button
-          className="action-btn"
-          title={isCameraOff ? 'Turn camera on' : 'Turn camera off'}
-          aria-pressed={isCameraOff}
-          onClick={toggleCamera}
-          disabled={!joined}
-        >
-          <span className="icon-wrap">
-            <VideoCameraIcon className="action-icon" />
-            {isCameraOff && <XMarkIcon className="icon-overlay" />}
-          </span>
-        </button>
       </div>
     </div>
   );

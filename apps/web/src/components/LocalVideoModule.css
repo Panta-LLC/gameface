@@ -1,25 +1,25 @@
 .local-video-pin {
-  position: fixed;
-  left: 16px;
-  bottom: 16px;
+  /* position: fixed; */
+  /* right: 16px;
+  bottom: 16px; */
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
+  align-self: flex-end;
   gap: 12px;
   background: transparent;
-  padding: 4px;
   z-index: 1000;
 }
 
 .local-video-element {
-  width: 180px;
+  width: 240px;
   height: auto;
   background: #000;
   border-radius: 10px;
   overflow: hidden;
   border-style: solid;
-  border-width: 10px; /* requested 10px border */
   /* complementary red to the remote-video blue border */
-  border-color: #ff6b81;
+  /* border-color: #ff6b81; */
   display: block;
 }
 
@@ -27,8 +27,13 @@
   display: flex;
   flex-direction: row; /* action buttons laid out horizontally */
   gap: 8px;
-  margin-left: 8px;
   align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 30px;
+  padding: 10px;
+  padding-right: 20px;
+  width: 100%;
 }
 
 .session-controls {

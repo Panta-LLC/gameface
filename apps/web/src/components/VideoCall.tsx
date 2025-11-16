@@ -258,6 +258,24 @@ export default function VideoCall({
 
       {/* Remote videos across the top */}
       <div className={`vc-main ${activity ? 'has-activity' : ''}`}>
+        <div className={`activity-wrapper open`}>
+          <ActivityHost
+            activity={activity ?? null}
+            onClose={() => {
+              onSelectActivity?.(null);
+              // keep activity gallery visible
+            }}
+            onSelect={(id) => {
+              if (id) {
+                onSelectActivity?.(id);
+                // activity selected — gallery remains accessible via landing view
+              } else {
+                onSelectActivity?.(null);
+                // no-op: remain in selection/gallery state
+              }
+            }}
+          />
+        </div>
         <div className="vc-remote-area">
           <div className="vc-remote-strip">
             {remoteStreamEntries.length === 0 && (
@@ -279,40 +297,20 @@ export default function VideoCall({
               </div>
             ))}
           </div>
-        </div>
-
-        <div className={`activity-wrapper open`}>
-          <ActivityHost
-            activity={activity ?? null}
-            onClose={() => {
-              onSelectActivity?.(null);
-              // keep activity gallery visible
-            }}
-            onSelect={(id) => {
-              if (id) {
-                onSelectActivity?.(id);
-                // activity selected — gallery remains accessible via landing view
-              } else {
-                onSelectActivity?.(null);
-                // no-op: remain in selection/gallery state
-              }
-            }}
-          />
+          {localStream && (
+            <LocalVideoModule
+              localStream={localStream}
+              isMuted={isMuted}
+              setIsMuted={setIsMuted}
+              isCameraOff={isCameraOff}
+              toggleCamera={toggleCamera}
+              joined={joined}
+              join={join}
+              leave={leave}
+            />
+          )}
         </div>
       </div>
-
-      {localStream && (
-        <LocalVideoModule
-          localStream={localStream}
-          isMuted={isMuted}
-          setIsMuted={setIsMuted}
-          isCameraOff={isCameraOff}
-          toggleCamera={toggleCamera}
-          joined={joined}
-          join={join}
-          leave={leave}
-        />
-      )}
     </div>
   );
 }

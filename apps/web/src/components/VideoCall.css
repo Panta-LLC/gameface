@@ -1,6 +1,6 @@
 :root {
-  --tile-radius: 22px;
-  --tile-border: 10px;
+  --tile-radius: 18px;
+  --tile-border: 0;
   --bg: #e3e3e3;
 }
 
@@ -10,7 +10,7 @@
   height: 100%;
   /* background: var(--bg); */
   border-radius: 18px;
-  padding: 0 12px;
+  padding: 0 9px;
   box-sizing: border-box;
 }
 
@@ -30,9 +30,7 @@
 
 /* Remote videos across the top */
 .vc-remote-strip {
-  display: inline-grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 3fr));
-  gap: 12px;
+  display: flex;
   align-items: center;
 }
 
@@ -41,7 +39,7 @@
    occupies full width and displays a grid of videos. When open the remote area
    becomes a vertical stack on the right. */
 .vc-main {
-  display: grid;
+  display: flex;
   grid-template-columns: auto 1fr;
   gap: 12px;
   align-items: start;
@@ -51,7 +49,11 @@
 .vc-remote-area {
   /* remote area (right column) */
   min-width: 0; /* allow grid child to shrink properly */
-  display: block;
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  justify-content: space-between;
+  width: 240px;
 }
 
 /* Activity wrapper (left column). We animate the wrapper's width from 0 to 50vw
@@ -64,8 +66,33 @@
 }
 
 .activity-wrapper.open {
-  width: 100%; /* expand to half the viewport */
-  height: calc(100vh - 61px);
+  /* desktop: take half the viewport so activity and remote area share space */
+  width: 100%;
+  height: calc(100vh - 88.5px);
+}
+
+/* Responsive: smaller viewports should give more space to the remote area
+   while allowing the activity panel to expand on very small screens. */
+@media (max-width: 1024px) {
+  .activity-wrapper.open {
+    width: 60vw;
+  }
+}
+
+@media (max-width: 640px) {
+  /* On mobile, activity should use the full width (becomes an overlay-like
+     column) so users can interact comfortably. */
+  .activity-wrapper.open {
+    width: 100%;
+    position: relative;
+    z-index: 10;
+    height: calc(100vh - 67px);
+  }
+  .vc-main.has-activity .vc-remote-strip {
+    /* keep remotes scrollable under the activity on small screens */
+    display: block;
+    height: auto;
+  }
 }
 
 /* Slide-up animation for the activity inner panel */
@@ -110,7 +137,7 @@
 }
 
 /* When activity is open, stack remote videos vertically in the right column */
-.vc-main.has-activity .vc-remote-strip {
+.vc-main .vc-remote-strip {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -118,11 +145,10 @@
   overflow: auto;
 }
 
-.vc-main.has-activity .vc-remote-tile video {
-  width: 100%;
+.vc-main .vc-remote-tile video {
+  max-width: 220px;
   height: auto;
-  max-height: 220px;
-  object-fit: cover;
+  /* object-fit: cover; */
 }
 
 /* Local video pinned bottom-left */
