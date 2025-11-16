@@ -31,6 +31,7 @@ export default function VideoCall({
   activity = null,
   onSelectActivity,
 }: Props) {
+  // activity selection is always visible in the activity column by default
   const [joined, setJoined] = useState(false);
   const [makingOffer, setMakingOffer] = useState(false);
   const [connectionState, setConnectionState] = useState('disconnected');
@@ -280,8 +281,23 @@ export default function VideoCall({
           </div>
         </div>
 
-        <div className={`activity-wrapper ${activity ? 'open' : ''}`}>
-          <ActivityHost activity={activity ?? null} onClose={() => onSelectActivity?.(null)} />
+        <div className={`activity-wrapper open`}>
+          <ActivityHost
+            activity={activity ?? null}
+            onClose={() => {
+              onSelectActivity?.(null);
+              // keep activity gallery visible
+            }}
+            onSelect={(id) => {
+              if (id) {
+                onSelectActivity?.(id);
+                // activity selected — gallery remains accessible via landing view
+              } else {
+                onSelectActivity?.(null);
+                // no-op: remain in selection/gallery state
+              }
+            }}
+          />
         </div>
       </div>
 

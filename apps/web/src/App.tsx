@@ -3,8 +3,8 @@ import { Button } from './components/ui/button';
 import VideoCall from './components/VideoCall';
 import RoomGate from './components/RoomGate';
 import AuthGate from './components/AuthGate';
-import ActivitySidebar from './components/ActivitySidebar';
-import ActivityHost from './components/ActivityHost';
+// Activity selection moved into the activity column/gallery handled inside VideoCall
+// and ActivityHost. Sidebar removed.
 import { useActivitySignaling } from './hooks/useActivitySignaling';
 
 export default function App() {
@@ -17,7 +17,7 @@ export default function App() {
   return (
     <div className="font-sans flex flex-col h-screen">
       {/* App Bar */}
-      <header className="p-4 flex justify-between items-center border-b border-gray-200">
+      <header className="p-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">Gameface Web</h1>
         {name && (
           <span className="text-sm">
@@ -38,7 +38,7 @@ export default function App() {
         ) : !room ? (
           <RoomGate onJoin={(r: string) => setRoom(r)} />
         ) : (
-          <div className="grid grid-cols-[1fr_auto] gap-3">
+          <div>
             <div>
               {/* <div className="mb-2">
                 <strong>Room:</strong> {room} · <strong>User:</strong> {name}{' '}
@@ -55,10 +55,7 @@ export default function App() {
               />
               {/* <ActivityHost activity={activityApi.activity} /> */}
             </div>
-            <ActivitySidebar
-              current={activityApi.activity}
-              onPick={(id) => activityApi.select(id)}
-            />
+            {/* Activity selection moved into the activity column/gallery; sidebar removed. */}
           </div>
         )}
       </main>

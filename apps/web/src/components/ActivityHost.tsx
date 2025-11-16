@@ -3,35 +3,88 @@ import React from 'react';
 type Props = {
   activity: string | null;
   onClose?: () => void;
+  // Called when the user picks an activity from the selection view. Pass
+  // null to return to selection or to signal clearing.
+  onSelect?: (id: string | null) => void;
 };
 
-export default function ActivityHost({ activity, onClose }: Props) {
+export default function ActivityHost({ activity, onClose, onSelect }: Props) {
   if (!activity) {
+    // Selection view: show cards for available activities that fill the
+    // available area. Use a header + scrollable body so the gallery takes
+    // the full height of the activity column.
+    const wrapperStyle: React.CSSProperties = {
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      padding: 12,
+      boxSizing: 'border-box',
+      gap: 12,
+    };
+
+    const headerStyle: React.CSSProperties = {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    };
+
+    const gridStyle: React.CSSProperties = {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(4, 1fr)',
+      gap: 12,
+      alignContent: 'start',
+    };
+
+    const cardStyle: React.CSSProperties = {
+      border: '1px solid #e0e0e0',
+      borderRadius: 8,
+      padding: 12,
+      background: '#fff',
+      cursor: 'pointer',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+      minHeight: 150,
+      alignItems: 'flex-end',
+    };
+
     return (
-      <div
-        style={{
-          display: 'grid',
-          placeItems: 'center',
-          height: 360,
-          background: '#f3f3f3',
-          border: '2px dashed #ccc',
-          borderRadius: 12,
-          marginTop: 12,
-        }}
-      >
-        <div>No activity selected. Use the sidebar to choose one.</div>
+      <div style={wrapperStyle}>
+        <div style={headerStyle}>
+          <h3 style={{ margin: 0 }}>Activities</h3>
+          <div style={{ color: '#666', fontSize: 13 }}>Select an activity</div>
+        </div>
+
+        <div style={{ overflow: 'auto', flex: 1 }}>
+          <div style={gridStyle}>
+            <button style={cardStyle} onClick={() => onSelect?.('card-table')}>
+              <h4>Card Table</h4>
+              <p>Play card games with friends.</p>
+            </button>
+            <button style={cardStyle} onClick={() => onSelect?.('trivia')}>
+              <h4>Trivia</h4>
+              <p>Host a quick trivia session.</p>
+            </button>
+            <button style={cardStyle} onClick={() => onSelect?.('whiteboard')}>
+              <h4>Whiteboard</h4>
+              <p>Collaborative drawing and notes.</p>
+            </button>
+            <button style={cardStyle} onClick={() => onSelect?.('custom')}>
+              <h4>Custom</h4>
+              <p>Other activity types.</p>
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   // Minimal placeholder UIs matching general style
   const commonStyle: React.CSSProperties = {
-    height: 360,
+    height: 'calc(100% - 61px)',
     borderRadius: 12,
     marginTop: 12,
     padding: 12,
     background: '#ffffff',
-    border: '2px solid #e0e0e0',
+    // border: '2px solid #e0e0e0',
     position: 'relative',
   };
 

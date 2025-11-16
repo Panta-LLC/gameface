@@ -18,7 +18,8 @@
   overflow: hidden;
   border-style: solid;
   border-width: 10px; /* requested 10px border */
-  border-color: #ffffff;
+  /* complementary red to the remote-video blue border */
+  border-color: #ff6b81;
   display: block;
 }
 
