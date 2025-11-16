@@ -4,6 +4,7 @@ import SignalingClient from '../webrtc/SignalingClient';
 import LocalVideoModule from './LocalVideoModule';
 import ActivityHost from './ActivityHost';
 import './VideoCall.css';
+import { useToast } from './Toast';
 
 const SIGNALING_URL = 'ws://localhost:3001';
 
@@ -39,6 +40,8 @@ export default function VideoCall({
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const toast = useToast();
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
@@ -173,6 +176,18 @@ export default function VideoCall({
     });
   }, [startLocal]);
 
+  // Surface errors to users via toast and keep inline error display
+  useEffect(() => {
+    if (error) {
+      try {
+        toast(error, 'error');
+      } catch (e) {
+        // if toast not available for some reason, still log
+        console.error('toast error', e);
+      }
+    }
+  }, [error, toast]);
+
   const toggleMute = () => {
     if (!localStreamRef.current) return;
     const audioTrack = localStreamRef.current.getAudioTracks()[0];
@@ -257,9 +272,10 @@ export default function VideoCall({
 
   return (
     <div className="vc-container">
-      {/* <div className="vc-controls">
-        <div>Connection: {connectionState}</div> */}
-      {/* {error && <div className="vc-error">{error}</div>} */}
+      <div className="vc-controls">
+        <div>Connection: {connectionState}</div>
+      </div>
+      {error && <div className="vc-error">{error}</div>}
       {/*<div className="vc-controls-row">
           <div>
             <strong>Room:</strong> {room}
