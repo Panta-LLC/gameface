@@ -1,0 +1,116 @@
+.local-video-pin {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  padding: 4px;
+  z-index: 1000;
+}
+
+.local-video-element {
+  width: 180px;
+  height: auto;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  border-style: solid;
+  border-width: 10px; /* requested 10px border */
+  border-color: #ffffff;
+  display: block;
+}
+
+.local-video-actions {
+  display: flex;
+  flex-direction: row; /* action buttons laid out horizontally */
+  gap: 8px;
+  margin-left: 8px;
+  align-items: center;
+}
+
+.session-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.session-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+}
+.session-btn.connect {
+  background: linear-gradient(180deg, #10b981, #059669);
+}
+.session-btn.leave {
+  background: linear-gradient(180deg, #ef4444, #dc2626);
+}
+
+.action-btn {
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+}
+
+.action-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.action-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-wrap {
+  position: relative;
+  display: inline-block;
+}
+.icon-overlay {
+  position: absolute;
+  inset: 0; /* fill */
+  width: 16px;
+  height: 16px;
+  color: #ff6b6b; /* red tint for 'off' */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Responsive: on small screens, move the video to center bottom and stack controls */
+@media (max-width: 640px) {
+  .local-video-pin {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 12px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .local-video-element {
+    width: 140px;
+  }
+
+  .local-video-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .session-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}

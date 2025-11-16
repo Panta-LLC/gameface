@@ -33,8 +33,9 @@ export function useActivitySignaling(room: string | null) {
     return () => client.close();
   }, [room]);
 
-  const select = useCallback((next: string) => {
+  const select = useCallback((next: string | null) => {
     setActivity(next);
+    // Allow clearing the activity by sending a null activity to the server.
     clientRef.current?.sendMessage({ type: 'select-activity', activity: next });
   }, []);
 

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SignalingClient from '../webrtc/SignalingClient';
-import { Button } from '../components/ui/button';
+import LocalVideoModule from './LocalVideoModule';
+import ActivityHost from './ActivityHost';
 import './VideoCall.css';
 
 const SIGNALING_URL = 'ws://localhost:3001';
@@ -9,9 +10,27 @@ const rtcConfig: RTCConfiguration = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 };
 
-type Props = { room: string; initialStream?: MediaStream; localStream?: MediaStream };
+type Props = {
+  room: string;
+  initialStream?: MediaStream;
+  localStream?: MediaStream;
+  // activity state is owned at a higher level (App) and passed down so the
+  // sidebar and the video UI stay in sync.
+  activity?: string | null;
+  // selection handler expects a non-null activity id when selecting an
+  // activity; clearing/closing can be handled by passing an explicit
+  // 'clear' action if needed (or by the parent calling select(null) if
+  // supported).
+  onSelectActivity?: (id: string | null) => void;
+};
 
-export default function VideoCall({ room, initialStream, localStream }: Props) {
+export default function VideoCall({
+  room,
+  initialStream,
+  localStream,
+  activity = null,
+  onSelectActivity,
+}: Props) {
   const [joined, setJoined] = useState(false);
   const [makingOffer, setMakingOffer] = useState(false);
   const [connectionState, setConnectionState] = useState('disconnected');
@@ -211,6 +230,9 @@ export default function VideoCall({ room, initialStream, localStream }: Props) {
 
   const remoteStreamEntries = useMemo(() => Object.entries(remoteStreams), [remoteStreams]);
 
+  // Activity ownership is lifted to App; use the prop value here.
+  // `onSelectActivity` is called by UI controls to change the activity.
+
   // Ensure streams are attached to DOM elements whenever either side changes
   useEffect(() => {
     for (const [id, stream] of Object.entries(remoteStreams)) {
@@ -223,73 +245,57 @@ export default function VideoCall({ room, initialStream, localStream }: Props) {
 
   return (
     <div className="vc-container">
-      <div className="vc-controls">
-        <div>Connection: {connectionState}</div>
-        {error && <div className="vc-error">{error}</div>}
-        <div className="vc-controls-row">
+      {/* <div className="vc-controls">
+        <div>Connection: {connectionState}</div> */}
+      {/* {error && <div className="vc-error">{error}</div>} */}
+      {/*<div className="vc-controls-row">
           <div>
             <strong>Room:</strong> {room}
           </div>
-          <button onClick={join} disabled={joined}>
-            Connect
-          </button>
-          <button onClick={leave} disabled={!joined}>
-            Leave
-          </button>
-          <button onClick={toggleMute} disabled={!joined}>
-            {isMuted ? 'Unmute' : 'Mute'}
-          </button>
-          <button onClick={toggleCamera} disabled={!joined}>
-            {isCameraOff ? 'Camera On' : 'Camera Off'}
-          </button>
+        </div>
+      </div> */}
+
+      {/* Remote videos across the top */}
+      <div className={`vc-main ${activity ? 'has-activity' : ''}`}>
+        <div className="vc-remote-area">
+          <div className="vc-remote-strip">
+            {remoteStreamEntries.length === 0 && (
+              <div className="vc-remote-placeholder">Waiting for peers…</div>
+            )}
+            {remoteStreamEntries.map(([id]) => (
+              <div className="vc-remote-tile" key={id}>
+                <video
+                  ref={(el) => {
+                    remoteVideoRefs.current[id] = el;
+                    const stream = remoteStreams[id];
+                    if (el && stream && el.srcObject !== stream) {
+                      el.srcObject = stream;
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className={`activity-wrapper ${activity ? 'open' : ''}`}>
+          <ActivityHost activity={activity ?? null} onClose={() => onSelectActivity?.(null)} />
         </div>
       </div>
 
-      {/* Remote videos across the top */}
-      <div className="vc-remote-strip">
-        {remoteStreamEntries.length === 0 && (
-          <div className="vc-remote-placeholder">Waiting for peers…</div>
-        )}
-        {remoteStreamEntries.map(([id]) => (
-          <div className="vc-remote-tile" key={id}>
-            <video
-              ref={(el) => {
-                remoteVideoRefs.current[id] = el;
-                const stream = remoteStreams[id];
-                if (el && stream && el.srcObject !== stream) {
-                  el.srcObject = stream;
-                }
-              }}
-              autoPlay
-              playsInline
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Local video pinned bottom-left */}
       {localStream && (
-        <footer className="bg-white border-t border-gray-200 p-4 fixed bottom-0 left-0 right-0 flex items-center justify-between">
-          <video
-            className="w-24 h-24 bg-black"
-            autoPlay
-            muted
-            playsInline
-            ref={(video) => {
-              if (video && localStream) {
-                video.srcObject = localStream;
-              }
-            }}
-          />
-          <div className="flex gap-2">
-            <Button variant="default" onClick={() => setIsMuted(!isMuted)}>
-              {isMuted ? 'Unmute' : 'Mute'}
-            </Button>
-            <Button variant="default" onClick={toggleCamera}>
-              {isCameraOff ? 'Turn Camera On' : 'Turn Camera Off'}
-            </Button>
-          </div>
-        </footer>
+        <LocalVideoModule
+          localStream={localStream}
+          isMuted={isMuted}
+          setIsMuted={setIsMuted}
+          isCameraOff={isCameraOff}
+          toggleCamera={toggleCamera}
+          joined={joined}
+          join={join}
+          leave={leave}
+        />
       )}
     </div>
   );

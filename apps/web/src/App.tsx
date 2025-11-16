@@ -40,18 +40,20 @@ export default function App() {
         ) : (
           <div className="grid grid-cols-[1fr_auto] gap-3">
             <div>
-              <div className="mb-2">
+              {/* <div className="mb-2">
                 <strong>Room:</strong> {room} · <strong>User:</strong> {name}{' '}
                 <Button variant="destructive" onClick={() => setRoom(null)}>
                   Leave room
                 </Button>
-              </div>
+              </div> */}
               <VideoCall
                 room={room}
                 initialStream={localStream ?? undefined}
                 localStream={localStream}
+                activity={activityApi.activity}
+                onSelectActivity={activityApi.select}
               />
-              <ActivityHost activity={activityApi.activity} />
+              {/* <ActivityHost activity={activityApi.activity} /> */}
             </div>
             <ActivitySidebar
               current={activityApi.activity}

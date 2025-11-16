@@ -1,6 +1,6 @@
 :root {
-  --tile-radius: 16px;
-  --tile-border: 3px;
+  --tile-radius: 22px;
+  --tile-border: 10px;
   --bg: #e3e3e3;
 }
 
@@ -8,8 +8,8 @@
   position: relative;
   width: 100%;
   min-height: 70vh;
-  background: var(--bg);
-  border-radius: 20px;
+  /* background: var(--bg); */
+  border-radius: 18px;
   padding: 12px;
   box-sizing: border-box;
 }
@@ -30,22 +30,72 @@
 
 /* Remote videos across the top */
 .vc-remote-strip {
-  display: grid;
+  display: inline-grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
-  align-items: start;
+  align-items: center;
+}
+
+/* Main area that contains remote videos and (optionally) activity panel stacked vertically. */
+.vc-main {
+  display: grid;
+  grid-template-rows: 1fr auto; /* remote videos take remaining height, activity sits below */
+  gap: 12px;
+  align-items: center;
+  min-height: 300px;
+}
+
+/* When activity is open, we can explicitly set rows (kept for compatibility). */
+.vc-main.has-activity {
+  grid-template-rows: 1fr 360px;
+}
+
+.vc-remote-area {
+  /* remote strip sits in this column and will shrink/grow */
+  min-width: 0; /* allow grid child to shrink properly */
+  display: flex;
+  justify-content: center;
+}
+
+/* Activity wrapper: animates width when opening/closing so the remote area resizes smoothly. */
+.activity-wrapper {
+  height: 0;
+  overflow: hidden;
+  transition: height 280ms ease;
+}
+
+.activity-wrapper.open {
+  height: 360px; /* matches ActivityHost preferred height */
+}
+
+/* Slide-up animation for the activity inner panel */
+.activity-wrapper .activity-panel,
+.activity-wrapper .activity-body,
+.activity-wrapper > div {
+  transform: translateY(12px);
+  opacity: 0;
+  transition:
+    transform 320ms ease,
+    opacity 320ms ease;
+}
+
+.activity-wrapper.open .activity-panel,
+.activity-wrapper.open .activity-body,
+.activity-wrapper.open > div {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 .vc-remote-tile {
   background: #fff;
   border-radius: var(--tile-radius);
   border: var(--tile-border) solid #7f8cff;
-  padding: 6px;
+  /* padding: 6px; */
 }
 
 .vc-remote-tile video {
-  width: 100%;
-  aspect-ratio: 16 / 9;
+  width: 50vh;
+  aspect-ratio: 16 / 12;
   background: #000;
   border-radius: 12px;
   display: block;
