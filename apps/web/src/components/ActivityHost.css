@@ -22,7 +22,8 @@
 
 .ah-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.5rem;
+  /* font-weight: bold; */
 }
 
 .ah-sub {
@@ -71,6 +72,13 @@
   outline: none;
   box-shadow: 0 0 0 3px rgba(127, 140, 255, 0.18);
   border-color: var(--ah-focus);
+}
+
+.ah-card h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+  font-weight: bold;
 }
 
 /* Landing / active activity */

@@ -8,9 +8,29 @@ class SignalingClient {
   private isOpen = false;
   private pending: string[] = [];
   private openCallbacks: Array<() => void> = [];
+  private messageHandlers: Set<(msg: SignalingMessage) => void> = new Set();
 
   constructor(serverUrl: string) {
     this.socket = new WebSocket(serverUrl);
+
+    // Single message forwarder — parses incoming messages and forwards to
+    // registered handlers. Using one centralized listener makes it easy to
+    // register/unregister logical handlers.
+    this.socket.addEventListener('message', (event: MessageEvent) => {
+      try {
+        const data = typeof event.data === 'string' ? event.data : '' + event.data;
+        const parsed = JSON.parse(data);
+        for (const h of Array.from(this.messageHandlers)) {
+          try {
+            h(parsed);
+          } catch (e) {
+            console.error('Signaling handler error', e);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse signaling message:', e, event.data);
+      }
+    });
 
     this.socket.addEventListener('open', () => {
       console.log('Connected to signaling server');
@@ -63,20 +83,17 @@ class SignalingClient {
     }
   }
 
+  // Register a message handler. Returns an unsubscribe function to remove it.
   onMessage(callback: (message: SignalingMessage) => void) {
-    this.socket.addEventListener('message', (event: MessageEvent) => {
-      try {
-        const data = typeof event.data === 'string' ? event.data : '' + event.data;
-        const parsed = JSON.parse(data);
-        callback(parsed);
-      } catch (e) {
-        console.error('Failed to parse signaling message:', e, event.data);
-      }
-    });
+    this.messageHandlers.add(callback);
+    return () => {
+      this.messageHandlers.delete(callback);
+    };
   }
 
   onDisconnect(callback: () => void) {
     this.socket.addEventListener('close', callback);
+    return () => this.socket.removeEventListener('close', callback);
   }
 
   onOpen(callback: () => void) {
@@ -86,8 +103,12 @@ class SignalingClient {
       } catch (e) {
         console.error('onOpen immediate callback error', e);
       }
+      return () => {};
     } else {
       this.openCallbacks.push(callback);
+      return () => {
+        this.openCallbacks = this.openCallbacks.filter((c) => c !== callback);
+      };
     }
   }
 

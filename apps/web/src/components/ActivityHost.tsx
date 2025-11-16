@@ -1,5 +1,7 @@
 import React from 'react';
 import './ActivityHost.css';
+import CardTableHost from './card-table/CardTableHost';
+import type { SignalingClientLike } from './card-table/types';
 
 type Props = {
   activity: string | null;
@@ -7,15 +9,18 @@ type Props = {
   // Called when the user picks an activity from the selection view. Pass
   // null to return to selection or to signal clearing.
   onSelect?: (id: string | null) => void;
+  // Optional signaling client adapter forwarded to activity hosts that need
+  // cross-client coordination (e.g. card table).
+  signalingClient?: SignalingClientLike | null;
 };
 
-export default function ActivityHost({ activity, onClose, onSelect }: Props) {
+export default function ActivityHost({ activity, onClose, onSelect, signalingClient }: Props) {
   if (!activity) {
     return (
       <div className="ah-wrapper">
         <div className="ah-header">
           <h3 className="ah-title">Activities</h3>
-          <div className="ah-sub">Select an activity</div>
+          {/* <div className="ah-sub">Select an activity</div> */}
         </div>
 
         <div className="ah-body">
@@ -30,7 +35,7 @@ export default function ActivityHost({ activity, onClose, onSelect }: Props) {
             </button>
             <button className="ah-card" onClick={() => onSelect?.('whiteboard')}>
               <h4>Whiteboard</h4>
-              <p>Collaborative drawing and notes.</p>
+              <p>Collaborative drawing.</p>
             </button>
             <button className="ah-card" onClick={() => onSelect?.('custom')}>
               <h4>Custom</h4>
@@ -50,7 +55,7 @@ export default function ActivityHost({ activity, onClose, onSelect }: Props) {
   const content = (() => {
     switch (activity) {
       case 'card-table':
-        return <div>Card Table – placeholder stage</div>;
+        return <CardTableHost signalingClient={signalingClient} />;
       case 'trivia':
         return <div>Trivia – placeholder stage</div>;
       case 'whiteboard':

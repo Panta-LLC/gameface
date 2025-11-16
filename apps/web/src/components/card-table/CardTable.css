@@ -1,0 +1,45 @@
+.ct-host {
+  display: block;
+}
+.ct-grid {
+  display: grid;
+  gap: 12px;
+}
+.ct-game-card {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.ct-game-card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+.ct-seat button {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.ct-seat button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+.ct-start-btn {
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.ct-start-btn:hover {
+  filter: brightness(0.95);
+}
+
+@media (max-width: 640px) {
+  .ct-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}

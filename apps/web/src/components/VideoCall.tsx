@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { SignalingClientLike } from './card-table/types';
 import SignalingClient from '../webrtc/SignalingClient';
 import LocalVideoModule from './LocalVideoModule';
 import ActivityHost from './ActivityHost';
@@ -116,6 +117,11 @@ export default function VideoCall({
   useEffect(() => {
     const signaling = new SignalingClient(SIGNALING_URL);
     signalingRef.current = signaling;
+    // expose adapter for card-table consumers
+    setCardSignaling({
+      send: (msg: any) => signaling.sendMessage(msg),
+      on: (h: any) => signaling.onMessage(h),
+    });
 
     signaling.onMessage(async (msg) => {
       console.log('[Signaling][recv]', msg);
@@ -155,6 +161,7 @@ export default function VideoCall({
 
     return () => {
       signaling.close();
+      setCardSignaling(null);
     };
     // Create PC early so we don't miss early offers and wire events once
     ensurePC();
@@ -244,6 +251,10 @@ export default function VideoCall({
     }
   }, [remoteStreams]);
 
+  // Signaling adapter state — exposed to activity hosts once the underlying
+  // SignalingClient is constructed so `on` can return a real unsubscribe.
+  const [cardSignaling, setCardSignaling] = useState<SignalingClientLike | null>(null);
+
   return (
     <div className="vc-container">
       {/* <div className="vc-controls">
@@ -261,6 +272,7 @@ export default function VideoCall({
         <div className={`activity-wrapper open`}>
           <ActivityHost
             activity={activity ?? null}
+            signalingClient={cardSignaling}
             onClose={() => {
               onSelectActivity?.(null);
               // keep activity gallery visible

@@ -69,6 +69,23 @@ export function createSignalingServer(httpServer: Server) {
 
   const gameSelection = new Map<string, string>();
   const readiness = new Map<string, Set<WebSocket>>();
+  // Card table authoritative state per room
+  type Seat = { index: number; playerId: string | null; displayName?: string };
+  type TableState = {
+    gameId: string | null;
+    seats: Seat[];
+    status: 'lobby' | 'started' | 'finished';
+    hostId?: string;
+  };
+  const tables = new Map<string, TableState>();
+
+  const initEmptyTable = (gameId: string | null, players = 4, hostId?: string): TableState => {
+    const seats: Seat[] = Array.from({ length: players }).map((_, i) => ({
+      index: i,
+      playerId: null,
+    }));
+    return { gameId, seats, status: 'lobby', hostId };
+  };
 
   const setGameForRoom = (room: string, game: string) => {
     gameSelection.set(room, game);
@@ -171,6 +188,95 @@ export function createSignalingServer(httpServer: Server) {
           startGame(room);
           break;
         }
+        // Card table messages (authoritative processing)
+        case 'cardtable.seat.claim': {
+          const room = socketRoom.get(ws);
+          if (!room) return console.warn('cardtable.seat.claim without room');
+          const { seatIndex, playerId, tableId } = data;
+          if (typeof seatIndex !== 'number' || !playerId)
+            return console.warn('invalid claim payload');
+          const cur = tables.get(room) || initEmptyTable(tableId ?? null, 4);
+          // Ensure we respect current occupancy
+          if (cur.seats[seatIndex] && cur.seats[seatIndex].playerId === null) {
+            cur.seats[seatIndex].playerId = playerId;
+            tables.set(room, cur);
+          } else {
+            // If seat taken, do not overwrite — we'll broadcast current state back
+            console.log('claim rejected, seat occupied');
+          }
+          broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: cur });
+          break;
+        }
+        case 'cardtable.seat.release': {
+          const room = socketRoom.get(ws);
+          if (!room) return console.warn('cardtable.seat.release without room');
+          const { seatIndex, playerId, tableId } = data;
+          if (typeof seatIndex !== 'number' || !playerId)
+            return console.warn('invalid release payload');
+          const cur = tables.get(room) || initEmptyTable(tableId ?? null, 4);
+          if (cur.seats[seatIndex] && cur.seats[seatIndex].playerId === playerId) {
+            cur.seats[seatIndex].playerId = null;
+            tables.set(room, cur);
+          }
+          broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: cur });
+          break;
+        }
+        case 'cardtable.seat.update': {
+          // Accept authoritative update from a client (useful for non-server/local fallback
+          // this ensures admins or relay clients can set the table). Merge into server state and broadcast.
+          const room = socketRoom.get(ws);
+          if (!room) return console.warn('cardtable.seat.update without room');
+          const { tableState } = data;
+          if (!tableState) return console.warn('cardtable.seat.update missing tableState');
+          // Basic validation/normalization
+          const normalized: TableState = {
+            gameId: tableState.gameId ?? null,
+            seats: Array.isArray(tableState.seats)
+              ? tableState.seats.map((s: any, i: number) => ({
+                  index: i,
+                  playerId: s.playerId ?? null,
+                }))
+              : initEmptyTable(tableState.gameId ?? null, 4).seats,
+            status: tableState.status ?? 'lobby',
+            hostId: tableState.hostId,
+          };
+          tables.set(room, normalized);
+          broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: normalized });
+          break;
+        }
+        case 'cardtable.start': {
+          const room = socketRoom.get(ws);
+          if (!room) return console.warn('cardtable.start without room');
+          const { tableState } = data;
+          const cur = tables.get(room) || (tableState ? tableState : initEmptyTable(null, 4));
+          // validate seats full
+          const filled = cur.seats.every((s: Seat) => s.playerId !== null);
+          if (!filled) {
+            // broadcast current state as rejection (clients can handle)
+            broadcastToRoom(room, {
+              type: 'cardtable.start',
+              ok: false,
+              reason: 'Seats not full',
+              tableState: cur,
+            });
+            break;
+          }
+          cur.status = 'started';
+          tables.set(room, cur);
+          broadcastToRoom(room, { type: 'cardtable.start', ok: true, tableState: cur });
+          break;
+        }
+        default: {
+          // For unrecognized messages (and tests that expect a simple echo),
+          // echo the received payload back to the sender. This keeps test
+          // behavior simple while not affecting room-based flows.
+          try {
+            ws.send(text);
+          } catch (e) {
+            console.error('Failed to echo message back to sender', e);
+          }
+          break;
+        }
       }
     });
 
@@ -180,5 +286,5 @@ export function createSignalingServer(httpServer: Server) {
     });
   });
 
-  return wss;
+  return { wss };
 }

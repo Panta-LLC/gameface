@@ -51,7 +51,7 @@
   min-width: 0; /* allow grid child to shrink properly */
   display: flex;
   flex-direction: column;
-  height: 90vh;
+  height: 88vh;
   justify-content: space-between;
   width: 265px;
 }
@@ -68,7 +68,7 @@
 .activity-wrapper.open {
   /* desktop: take half the viewport so activity and remote area share space */
   width: 100%;
-  height: calc(100vh - 88.5px);
+  height: calc(100vh - 95px);
 }
 
 /* Responsive: smaller viewports should give more space to the remote area
