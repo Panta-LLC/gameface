@@ -27,6 +27,9 @@ export function createSignalingServer(httpServer: Server) {
   const wss = new WebSocketServer({ server: httpServer });
   console.log('WebSocketServer created');
 
+  // Unique id for this server instance so we can ignore our own pub/sub messages
+  const instanceId = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
   // In-memory room management
   const rooms = new Map<string, Set<WebSocket>>();
   const socketRoom = new WeakMap<WebSocket, string>();
@@ -68,6 +71,7 @@ export function createSignalingServer(httpServer: Server) {
   };
 
   const gameSelection = new Map<string, string>();
+  const activitySelection = new Map<string, string>();
   const readiness = new Map<string, Set<WebSocket>>();
   // Card table authoritative state per room
   type Seat = { index: number; playerId: string | null; displayName?: string };
@@ -90,6 +94,17 @@ export function createSignalingServer(httpServer: Server) {
   const setGameForRoom = (room: string, game: string) => {
     gameSelection.set(room, game);
     readiness.set(room, new Set());
+    // publish game selection to other instances
+    try {
+      void redisPubSub.publish('signaling:room', {
+        source: instanceId,
+        type: 'game-selected',
+        room,
+        game,
+      });
+    } catch (e) {
+      console.error('Failed to publish game-selected', e);
+    }
   };
 
   const markReady = (ws: WebSocket) => {
@@ -115,6 +130,47 @@ export function createSignalingServer(httpServer: Server) {
   wss.on('connection', (ws: WebSocket) => {
     console.log('Client connected');
 
+    // Subscribe to Redis room updates and apply external changes to this server's state
+    // We subscribe per-wss instance so the handler can access the local maps and broadcast function.
+    void redisPubSub.subscribe('signaling:room', (msg: any) => {
+      try {
+        if (!msg || msg.source === instanceId) return; // ignore our own messages
+        const { type, room } = msg;
+        if (!room) return;
+        switch (type) {
+          case 'game-selected':
+            gameSelection.set(room, msg.game);
+            broadcastToRoom(room, { type: 'game-selected', game: msg.game });
+            break;
+          case 'activity-selected':
+            activitySelection.set(room, msg.activity);
+            broadcastToRoom(room, { type: 'activity-selected', activity: msg.activity });
+            break;
+          case 'cardtable.seat.update':
+            // merge/overwrite canonical table state and broadcast
+            if (msg.tableState) {
+              tables.set(room, msg.tableState);
+              broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: msg.tableState });
+            }
+            break;
+          case 'cardtable.start':
+            if (msg.tableState) {
+              tables.set(room, msg.tableState);
+              broadcastToRoom(room, {
+                type: 'cardtable.start',
+                ok: true,
+                tableState: msg.tableState,
+              });
+            }
+            break;
+          default:
+            break;
+        }
+      } catch (e) {
+        console.error('Error handling redis pubsub message', e);
+      }
+    });
+
     ws.on('message', (message: RawData) => {
       const text = typeof message === 'string' ? message : message.toString();
       console.log('Received message:', text);
@@ -134,7 +190,38 @@ export function createSignalingServer(httpServer: Server) {
             return;
           }
           joinRoom(ws, room);
+          // notify other peers a new peer joined
           broadcastToRoom(room, { type: 'peer-joined', id: socketId.get(ws) }, ws);
+
+          // If we have a selected game/activity, send those to the joining socket
+          // so late-joiners are fully in sync.
+          const selectedGame = gameSelection.get(room);
+          if (selectedGame) {
+            try {
+              ws.send(JSON.stringify({ type: 'game-selected', game: selectedGame }));
+            } catch (e) {
+              console.error('Failed to send selectedGame to joiner', e);
+            }
+          }
+          const selectedActivity = activitySelection.get(room);
+          if (selectedActivity) {
+            try {
+              ws.send(JSON.stringify({ type: 'activity-selected', activity: selectedActivity }));
+            } catch (e) {
+              console.error('Failed to send selectedActivity to joiner', e);
+            }
+          }
+
+          // If we have an authoritative card table for this room, send it
+          // directly to the joining socket so late-joiners are in sync.
+          const existing = tables.get(room);
+          if (existing) {
+            try {
+              ws.send(JSON.stringify({ type: 'cardtable.seat.update', tableState: existing }));
+            } catch (e) {
+              console.error('Failed to send existing tableState to joiner', e);
+            }
+          }
           break;
         }
         case 'select-game': {
@@ -149,7 +236,18 @@ export function createSignalingServer(httpServer: Server) {
           const room = socketRoom.get(ws);
           if (!room) return console.warn('select-activity without room');
           if (!data.activity) return console.warn('select-activity missing activity');
+          activitySelection.set(room, data.activity);
           broadcastToRoom(room, { type: 'activity-selected', activity: data.activity });
+          try {
+            void redisPubSub.publish('signaling:room', {
+              source: instanceId,
+              type: 'activity-selected',
+              room,
+              activity: data.activity,
+            });
+          } catch (e) {
+            console.error('Failed to publish activity-selected', e);
+          }
           break;
         }
         case 'offer': {
@@ -205,6 +303,16 @@ export function createSignalingServer(httpServer: Server) {
             console.log('claim rejected, seat occupied');
           }
           broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: cur });
+          try {
+            void redisPubSub.publish('signaling:room', {
+              source: instanceId,
+              type: 'cardtable.seat.update',
+              room,
+              tableState: cur,
+            });
+          } catch (e) {
+            console.error('Failed to publish cardtable.seat.update', e);
+          }
           break;
         }
         case 'cardtable.seat.release': {
@@ -219,6 +327,16 @@ export function createSignalingServer(httpServer: Server) {
             tables.set(room, cur);
           }
           broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: cur });
+          try {
+            void redisPubSub.publish('signaling:room', {
+              source: instanceId,
+              type: 'cardtable.seat.update',
+              room,
+              tableState: cur,
+            });
+          } catch (e) {
+            console.error('Failed to publish cardtable.seat.update', e);
+          }
           break;
         }
         case 'cardtable.seat.update': {
@@ -242,6 +360,16 @@ export function createSignalingServer(httpServer: Server) {
           };
           tables.set(room, normalized);
           broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: normalized });
+          try {
+            void redisPubSub.publish('signaling:room', {
+              source: instanceId,
+              type: 'cardtable.seat.update',
+              room,
+              tableState: normalized,
+            });
+          } catch (e) {
+            console.error('Failed to publish cardtable.seat.update', e);
+          }
           break;
         }
         case 'cardtable.start': {
@@ -264,6 +392,16 @@ export function createSignalingServer(httpServer: Server) {
           cur.status = 'started';
           tables.set(room, cur);
           broadcastToRoom(room, { type: 'cardtable.start', ok: true, tableState: cur });
+          try {
+            void redisPubSub.publish('signaling:room', {
+              source: instanceId,
+              type: 'cardtable.start',
+              room,
+              tableState: cur,
+            });
+          } catch (e) {
+            console.error('Failed to publish cardtable.start', e);
+          }
           break;
         }
         default: {
