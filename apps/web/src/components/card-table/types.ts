@@ -13,12 +13,16 @@ export type TableState = {
   meta?: Record<string, any>;
 };
 
+import type { ComponentType } from 'react';
+
 export interface GameAdapter {
   id: GameId;
   players: number;
   initialState?: (seed?: string) => any;
   GameBoard?: React.ComponentType<any>;
   validateStart?: (state: TableState) => { ok: boolean; reason?: string };
+  // Optional rules component to show on the seating screen (quick reference)
+  rulesComponent?: ComponentType<any>;
 }
 
 export type GameDef = {

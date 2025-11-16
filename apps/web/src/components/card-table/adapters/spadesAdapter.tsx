@@ -1,5 +1,6 @@
 import React from 'react';
 import type { GameAdapter } from '../types';
+import SpadesRules from '../rules/spadesRules';
 
 export const spadesAdapter: GameAdapter = {
   id: 'spades',
@@ -21,6 +22,8 @@ export const spadesAdapter: GameAdapter = {
       </div>
     );
   },
+  // Provide the rules UI directly from the adapter
+  rulesComponent: SpadesRules,
 };
 
 export default spadesAdapter;

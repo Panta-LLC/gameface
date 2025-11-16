@@ -25,6 +25,16 @@ export default function SeatingBoard({
   return (
     <div className="ct-seating" style={{ padding: 12 }}>
       <h3 style={{ marginTop: 0 }}>{gameDef.name} — Seating</h3>
+      {/* Game rules / quick reference */}
+      <details style={{ marginBottom: 8 }}>
+        <summary style={{ cursor: 'pointer', fontSize: 13 }}>Show game rules</summary>
+        {gameDef.adapter && gameDef.adapter.rulesComponent ? (
+          // render the provided rules component from the adapter
+          React.createElement(gameDef.adapter.rulesComponent)
+        ) : (
+          <div style={{ marginTop: 8, color: '#666' }}>No rules available for this game.</div>
+        )}
+      </details>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {tableState.seats.map((s) => {
           const occupied = !!s.playerId;

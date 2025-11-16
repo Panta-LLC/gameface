@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import type { GameDef } from './types';
 import { spadesAdapter } from './adapters/spadesAdapter';
+
 import CardGameSelector from './CardGameSelector';
 import SeatingBoard from './SeatingBoard';
 import GameBoardWrapper from './GameBoardWrapper';
