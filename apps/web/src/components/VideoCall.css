@@ -53,7 +53,7 @@
   flex-direction: column;
   height: 90vh;
   justify-content: space-between;
-  width: 240px;
+  width: 265px;
 }
 
 /* Activity wrapper (left column). We animate the wrapper's width from 0 to 50vw
@@ -118,6 +118,7 @@
   background: #fff;
   border-radius: var(--tile-radius);
   border: var(--tile-border) solid #7f8cff;
+  padding: 10px;
 }
 
 /* Default: show remote videos in a responsive grid (when no activity) */
