@@ -18,11 +18,6 @@ if (typeof RedisExport === 'object') {
 }
 const redisPubSub = new (RedisExport as any)();
 
-(async () => {
-  await redisPubSub.connect();
-  console.log('RedisPubSub connected');
-})();
-
 export function createSignalingServer(httpServer: Server) {
   const wss = new WebSocketServer({ server: httpServer });
   console.log('WebSocketServer created');
@@ -96,7 +91,7 @@ export function createSignalingServer(httpServer: Server) {
     readiness.set(room, new Set());
     // publish game selection to other instances
     try {
-      void redisPubSub.publish('signaling:room', {
+      void redisPubSub.publish(`signaling:room:${room}`, {
         source: instanceId,
         type: 'game-selected',
         room,
@@ -127,49 +122,59 @@ export function createSignalingServer(httpServer: Server) {
   };
 
   // WebRTC Signaling Events
+  // Connect to Redis and subscribe once per server instance to all per-room channels and route messages
+  void redisPubSub
+    .connect()
+    .then(() => {
+      console.log('RedisPubSub connected (server-level)');
+      void redisPubSub.psubscribe('signaling:room:*', (msg: any, channel: string) => {
+        try {
+          if (!msg || msg.source === instanceId) return; // ignore our own messages
+          const { type, room } = msg;
+          if (!room) return;
+          switch (type) {
+            case 'game-selected':
+              gameSelection.set(room, msg.game);
+              broadcastToRoom(room, { type: 'game-selected', game: msg.game });
+              break;
+            case 'activity-selected':
+              activitySelection.set(room, msg.activity);
+              broadcastToRoom(room, { type: 'activity-selected', activity: msg.activity });
+              break;
+            case 'cardtable.seat.update':
+              // merge/overwrite canonical table state and broadcast
+              if (msg.tableState) {
+                tables.set(room, msg.tableState);
+                broadcastToRoom(room, {
+                  type: 'cardtable.seat.update',
+                  tableState: msg.tableState,
+                });
+              }
+              break;
+            case 'cardtable.start':
+              if (msg.tableState) {
+                tables.set(room, msg.tableState);
+                broadcastToRoom(room, {
+                  type: 'cardtable.start',
+                  ok: true,
+                  tableState: msg.tableState,
+                });
+              }
+              break;
+            default:
+              break;
+          }
+        } catch (e) {
+          console.error('Error handling redis pubsub message', e);
+        }
+      });
+    })
+    .catch((e: any) => {
+      console.error('Failed to connect to RedisPubSub for server', e);
+    });
+
   wss.on('connection', (ws: WebSocket) => {
     console.log('Client connected');
-
-    // Subscribe to Redis room updates and apply external changes to this server's state
-    // We subscribe per-wss instance so the handler can access the local maps and broadcast function.
-    void redisPubSub.subscribe('signaling:room', (msg: any) => {
-      try {
-        if (!msg || msg.source === instanceId) return; // ignore our own messages
-        const { type, room } = msg;
-        if (!room) return;
-        switch (type) {
-          case 'game-selected':
-            gameSelection.set(room, msg.game);
-            broadcastToRoom(room, { type: 'game-selected', game: msg.game });
-            break;
-          case 'activity-selected':
-            activitySelection.set(room, msg.activity);
-            broadcastToRoom(room, { type: 'activity-selected', activity: msg.activity });
-            break;
-          case 'cardtable.seat.update':
-            // merge/overwrite canonical table state and broadcast
-            if (msg.tableState) {
-              tables.set(room, msg.tableState);
-              broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: msg.tableState });
-            }
-            break;
-          case 'cardtable.start':
-            if (msg.tableState) {
-              tables.set(room, msg.tableState);
-              broadcastToRoom(room, {
-                type: 'cardtable.start',
-                ok: true,
-                tableState: msg.tableState,
-              });
-            }
-            break;
-          default:
-            break;
-        }
-      } catch (e) {
-        console.error('Error handling redis pubsub message', e);
-      }
-    });
 
     ws.on('message', (message: RawData) => {
       const text = typeof message === 'string' ? message : message.toString();
@@ -239,7 +244,7 @@ export function createSignalingServer(httpServer: Server) {
           activitySelection.set(room, data.activity);
           broadcastToRoom(room, { type: 'activity-selected', activity: data.activity });
           try {
-            void redisPubSub.publish('signaling:room', {
+            void redisPubSub.publish(`signaling:room:${room}`, {
               source: instanceId,
               type: 'activity-selected',
               room,
@@ -304,7 +309,7 @@ export function createSignalingServer(httpServer: Server) {
           }
           broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: cur });
           try {
-            void redisPubSub.publish('signaling:room', {
+            void redisPubSub.publish(`signaling:room:${room}`, {
               source: instanceId,
               type: 'cardtable.seat.update',
               room,
@@ -328,7 +333,7 @@ export function createSignalingServer(httpServer: Server) {
           }
           broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: cur });
           try {
-            void redisPubSub.publish('signaling:room', {
+            void redisPubSub.publish(`signaling:room:${room}`, {
               source: instanceId,
               type: 'cardtable.seat.update',
               room,
@@ -361,7 +366,7 @@ export function createSignalingServer(httpServer: Server) {
           tables.set(room, normalized);
           broadcastToRoom(room, { type: 'cardtable.seat.update', tableState: normalized });
           try {
-            void redisPubSub.publish('signaling:room', {
+            void redisPubSub.publish(`signaling:room:${room}`, {
               source: instanceId,
               type: 'cardtable.seat.update',
               room,
@@ -393,7 +398,7 @@ export function createSignalingServer(httpServer: Server) {
           tables.set(room, cur);
           broadcastToRoom(room, { type: 'cardtable.start', ok: true, tableState: cur });
           try {
-            void redisPubSub.publish('signaling:room', {
+            void redisPubSub.publish(`signaling:room:${room}`, {
               source: instanceId,
               type: 'cardtable.start',
               room,
