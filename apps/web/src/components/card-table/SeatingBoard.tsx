@@ -29,8 +29,8 @@ export default function SeatingBoard({
       <details style={{ marginBottom: 8 }}>
         <summary style={{ cursor: 'pointer', fontSize: 13 }}>Show game rules</summary>
         {gameDef.adapter && gameDef.adapter.rulesComponent ? (
-          // render the provided rules component from the adapter
-          React.createElement(gameDef.adapter.rulesComponent)
+          // render the provided rules component from the adapter and pass players count
+          React.createElement(gameDef.adapter.rulesComponent, { players: gameDef.players })
         ) : (
           <div style={{ marginTop: 8, color: '#666' }}>No rules available for this game.</div>
         )}

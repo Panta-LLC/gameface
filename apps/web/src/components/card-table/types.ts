@@ -31,6 +31,8 @@ export type GameDef = {
   players: number;
   description?: string;
   adapter?: GameAdapter;
+  // Optional list of supported player counts (e.g. [2,4]) shown at selection time
+  playersOptions?: number[];
 };
 
 export type SignalingClientLike = {

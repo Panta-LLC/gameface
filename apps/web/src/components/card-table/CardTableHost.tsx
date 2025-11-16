@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { GameDef } from './types';
 import { spadesAdapter } from './adapters/spadesAdapter';
 
@@ -13,6 +13,7 @@ const GAMES: GameDef[] = [
     id: 'spades',
     name: 'Spades',
     players: 4,
+    playersOptions: [2, 4],
     description: 'Classic trick-taking',
     adapter: spadesAdapter,
   },
@@ -39,6 +40,7 @@ export default function CardTableHost({
     () => GAMES.find((g) => g.id === initialGameId) ?? null,
     [initialGameId],
   );
+  const [pendingVariantGame, setPendingVariantGame] = useState<GameDef | null>(null);
   const { tableState, pendingSeatClaim, takeSeat, leaveSeat, attemptStart, selectGame, send } =
     useCardTable({ signaling: signalingClient, initialGame, currentPlayerId: me });
 
@@ -51,8 +53,36 @@ export default function CardTableHost({
       <div className="ct-host">
         <CardGameSelector
           games={GAMES}
-          onSelect={(id) => selectGame(GAMES.find((g) => g.id === id) ?? null)}
+          onSelect={(id) => {
+            const g = GAMES.find((gg) => gg.id === id) ?? null;
+            if (g && g.playersOptions && g.playersOptions.length > 1) {
+              // ask the user to pick variant before creating table
+              setPendingVariantGame(g);
+            } else {
+              selectGame(g);
+            }
+          }}
         />
+        {pendingVariantGame && (
+          <div style={{ padding: 12 }}>
+            <h4 style={{ marginTop: 0 }}>Choose players</h4>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {pendingVariantGame.playersOptions!.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => {
+                    // pass a GameDef with the selected players count
+                    selectGame({ ...pendingVariantGame, players: opt });
+                    setPendingVariantGame(null);
+                  }}
+                >
+                  {opt} players
+                </button>
+              ))}
+              <button onClick={() => setPendingVariantGame(null)}>Cancel</button>
+            </div>
+          </div>
+        )}
         <div style={{ padding: 12 }}>
           <button onClick={() => onClose?.()}>Close</button>
         </div>

@@ -10,7 +10,7 @@ export const spadesAdapter: GameAdapter = {
     const filled = state.seats.every((s) => s.playerId !== null);
     return {
       ok: filled,
-      reason: filled ? undefined : 'All 4 seats must be filled to start Spades',
+      reason: filled ? undefined : `All ${state.seats.length} seats must be filled to start Spades`,
     };
   },
   GameBoard: function SpadesBoard({ tableState }: any) {
