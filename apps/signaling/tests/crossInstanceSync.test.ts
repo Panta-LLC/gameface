@@ -63,8 +63,8 @@ describe('cross-instance sync', () => {
     // A claims a seat
     a.send(JSON.stringify({ type: 'cardtable.seat.claim', seatIndex: 0, playerId: 'alice' }));
 
-  const msg = await waitForType(b, 'cardtable.seat.update', 2000);
-  const parsed = JSON.parse(msg);
+    const msg = await waitForType(b, 'cardtable.seat.update', 2000);
+    const parsed = JSON.parse(msg);
     expect(parsed.type).toBe('cardtable.seat.update');
     expect(parsed.tableState).toBeDefined();
     expect(parsed.tableState.seats[0].playerId).toBe('alice');
