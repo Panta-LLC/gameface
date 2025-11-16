@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  registerHandler,
   loginHandler,
   socialLoginHandler,
   refreshTokenHandler,
@@ -10,6 +11,9 @@ const router = express.Router();
 
 // User login endpoint
 router.post('/login', loginHandler);
+
+// User registration endpoint
+router.post('/register', registerHandler);
 
 // Social login endpoint
 router.get('/social/:provider/start', socialLoginHandler);
