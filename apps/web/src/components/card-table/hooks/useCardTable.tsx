@@ -77,6 +77,21 @@ export function useCardTable({ signaling, initialGame, currentPlayerId }: UseCar
     }
   };
 
+  // Expose a signaling client-like object (send + on) so consumers can both send
+  // and subscribe to incoming messages. This ensures adapters receive the same
+  // client the hook uses for broadcasting.
+  const signalingClient: SignalingClientLike = {
+    send: (m: any) => {
+      if (signalingRef.current) signalingRef.current.send(m);
+      else globalCardTableBus.send(m);
+    },
+    on: (handler?: (m: any) => void) => {
+      if (signalingRef.current?.on) return signalingRef.current.on(handler as any);
+      if (!handler) return () => {};
+      return globalCardTableBus.on(handler as any);
+    },
+  };
+
   const takeSeat = (seatIndex: number) => {
     if (!tableState) return;
     // compute next state and apply optimistically
@@ -157,5 +172,6 @@ export function useCardTable({ signaling, initialGame, currentPlayerId }: UseCar
     attemptStart,
     selectGame,
     send,
+    signalingClient,
   };
 }

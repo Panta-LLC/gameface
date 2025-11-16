@@ -41,8 +41,16 @@ export default function CardTableHost({
     [initialGameId],
   );
   const [pendingVariantGame, setPendingVariantGame] = useState<GameDef | null>(null);
-  const { tableState, pendingSeatClaim, takeSeat, leaveSeat, attemptStart, selectGame, send } =
-    useCardTable({ signaling: signalingClient, initialGame, currentPlayerId: me });
+  const {
+    tableState,
+    pendingSeatClaim,
+    takeSeat,
+    leaveSeat,
+    attemptStart,
+    selectGame,
+    send,
+    signalingClient: client,
+  } = useCardTable({ signaling: signalingClient, initialGame, currentPlayerId: me });
 
   const selectedAdapter = tableState
     ? GAMES.find((g) => g.id === tableState.gameId)?.adapter
@@ -111,7 +119,7 @@ export default function CardTableHost({
       adapter={selectedAdapter ?? undefined}
       tableState={tableState}
       playerId={me}
-      signaling={{ send }}
+      signaling={client}
     />
   );
 }
