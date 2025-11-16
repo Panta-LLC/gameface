@@ -45,12 +45,15 @@ describe('Session Persistence', () => {
     // Return null for revoked token lookup, and session JSON for session lookup
     redisClient.get = vi.fn((key: string) => {
       if (key && key.startsWith('revoked:refresh:')) return Promise.resolve(null);
-      if (key && key.startsWith('session:')) return Promise.resolve(JSON.stringify({ email: 'u@ex.com' }));
+      if (key && key.startsWith('session:'))
+        return Promise.resolve(JSON.stringify({ email: 'u@ex.com' }));
       return Promise.resolve(null);
     });
 
     // Create a real JWT signed with dev secret so jwt.verify works in the handler
-    const token = jwt.sign({ sub: 'u@ex.com' }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '1h' });
+    const token = jwt.sign({ sub: 'u@ex.com' }, process.env.JWT_SECRET || 'dev-secret', {
+      expiresIn: '1h',
+    });
 
     const response = await request(app).get('/session').set('Authorization', `Bearer ${token}`);
 
