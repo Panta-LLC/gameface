@@ -1,19 +1,23 @@
+import { vi, describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import bodyParser from 'body-parser';
 
-// Mock redis client used by controllers
-jest.mock('redis', () => ({
-  createClient: jest.fn(() => ({
-    connect: jest.fn(),
-    get: jest.fn(),
-    set: jest.fn(),
-    del: jest.fn(),
-    expire: jest.fn(),
-  })),
-}));
+// Mock redis client used by controllers (vitest `vi` global)
+vi.mock('redis', () => {
+  const client = {
+    on: vi.fn(),
+    connect: vi.fn(),
+    get: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+    expire: vi.fn(),
+  };
+  return { createClient: vi.fn(() => client) };
+});
 
 import authRoutes from '../src/routes/auth';
+import * as controllers from '../src/controllers/auth';
 
 describe('Auth endpoints', () => {
   let app: express.Express;
@@ -24,13 +28,21 @@ describe('Auth endpoints', () => {
     app = express();
     app.use(bodyParser.json());
     app.use('/', authRoutes);
-    const { createClient } = require('redis');
-    redisClient = createClient();
+    // Grab the same redis client instance used by the controller so we can set per-test mocks
+    redisClient = controllers.redisClient;
+  });
+
+  beforeEach(() => {
+    // Reset/mock client methods between tests to avoid cross-test interference
+    redisClient.get = vi.fn();
+    redisClient.set = vi.fn();
+    redisClient.del = vi.fn();
+    redisClient.expire = vi.fn();
   });
 
   it('should register a new user', async () => {
-    redisClient.get.mockResolvedValue(null);
-    redisClient.set.mockResolvedValue('OK');
+    redisClient.get = vi.fn().mockResolvedValue(null);
+    redisClient.set = vi.fn().mockResolvedValue('OK');
 
     const res = await request(app)
       .post('/register')
@@ -40,7 +52,9 @@ describe('Auth endpoints', () => {
   });
 
   it('should not register an existing user', async () => {
-    redisClient.get.mockResolvedValue(JSON.stringify({ email: 'u@ex.com', passwordHash: 'hash' }));
+    redisClient.get = vi
+      .fn()
+      .mockResolvedValue(JSON.stringify({ email: 'u@ex.com', passwordHash: 'hash' }));
 
     const res = await request(app)
       .post('/register')
@@ -49,12 +63,14 @@ describe('Auth endpoints', () => {
   });
 
   it('should login an existing user with correct password', async () => {
-    // bcrypt hash of 'passw0rd' generated using bcrypt.hashSync('passw0rd', 10)
-    const hash = '$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
-    redisClient.get.mockResolvedValue(JSON.stringify({ email: 'u@ex.com', passwordHash: hash }));
+    const bcrypt = require('bcryptjs');
+    const hash = bcrypt.hashSync('passw0rd', 10);
+    redisClient.get = vi
+      .fn()
+      .mockResolvedValue(JSON.stringify({ email: 'u@ex.com', passwordHash: hash }));
 
     const res = await request(app).post('/login').send({ email: 'u@ex.com', password: 'passw0rd' });
-    // Depending on environment JWT secret, login should either succeed or fail; we accept 200 or 401
-    expect([200, 401]).toContain(res.status);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('token');
   });
 });

@@ -272,9 +272,9 @@ export default function VideoCall({
 
   return (
     <div className="vc-container">
-      <div className="vc-controls">
+      {/* <div className="vc-controls">
         <div>Connection: {connectionState}</div>
-      </div>
+      </div> */}
       {error && <div className="vc-error">{error}</div>}
       {/*<div className="vc-controls-row">
           <div>

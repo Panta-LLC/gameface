@@ -38,7 +38,7 @@ const loginRateLimiter = rateLimit({
 });
 
 // Initialize Redis client
-const redisClient = createClient();
+export const redisClient = createClient();
 
 redisClient.on('error', (err: Error) => console.error('Redis Client Error', err));
 
@@ -144,10 +144,12 @@ export const sessionPersistenceHandler = async (req: Request, res: Response) => 
 
     // Validate token signature and claims
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+      // Validate token signature and claims
+  const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret');
 
       // Check if the token is revoked
       const isRevoked = await redisClient.get(`revoked:refresh:${token}`);
+
 
       if (isRevoked) {
         return res.status(401).json({ error: 'Session expired or invalid' });
@@ -156,6 +158,7 @@ export const sessionPersistenceHandler = async (req: Request, res: Response) => 
       // Update session metadata
       const sessionKey = `session:${decoded.sub}`;
       const sessionData = await redisClient.get(sessionKey);
+
 
       if (!sessionData) {
         return res.status(401).json({ error: 'Session not found' });
@@ -167,6 +170,8 @@ export const sessionPersistenceHandler = async (req: Request, res: Response) => 
 
       // Extend session lifetime
       await redisClient.expire(sessionKey, 3600); // Extend session TTL to 1 hour
+
+
 
       res.status(200).json({ message: 'Session is active', session });
     } catch (err) {
