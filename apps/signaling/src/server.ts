@@ -230,6 +230,13 @@ export function createSignalingServer(httpServer: Server) {
             return;
           }
           joinRoom(ws, room);
+          // Send a welcome message with this socket's id so clients can
+          // identify themselves for peer-to-peer signaling.
+          try {
+            ws.send(JSON.stringify({ type: 'welcome', id: socketId.get(ws) }));
+          } catch (e) {
+            console.error('Failed to send welcome id to joiner', e);
+          }
           // notify other peers a new peer joined
           broadcastToRoom(room, { type: 'peer-joined', id: socketId.get(ws) }, ws);
           // If we don't have state in-memory for this room, attempt to load
@@ -309,19 +316,19 @@ export function createSignalingServer(httpServer: Server) {
         case 'offer': {
           const room = socketRoom.get(ws);
           if (!room) return console.warn('offer without room');
-          broadcastToRoom(room, { type: 'offer', sdp: data.sdp }, ws);
+          broadcastToRoom(room, { type: 'offer', sdp: data.sdp, id: socketId.get(ws) }, ws);
           break;
         }
         case 'answer': {
           const room = socketRoom.get(ws);
           if (!room) return console.warn('answer without room');
-          broadcastToRoom(room, { type: 'answer', sdp: data.sdp }, ws);
+          broadcastToRoom(room, { type: 'answer', sdp: data.sdp, id: socketId.get(ws) }, ws);
           break;
         }
         case 'candidate': {
           const room = socketRoom.get(ws);
           if (!room) return console.warn('candidate without room');
-          broadcastToRoom(room, { type: 'candidate', candidate: data.candidate }, ws);
+          broadcastToRoom(room, { type: 'candidate', candidate: data.candidate, id: socketId.get(ws) }, ws);
           break;
         }
         case 'leave': {

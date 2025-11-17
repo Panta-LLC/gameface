@@ -19,14 +19,14 @@ export default function App() {
     <ToastProvider>
       <div className="font-sans flex flex-col h-screen bg-gray-200">
         {/* App Bar */}
-        <header className="p-4 flex justify-between items-center bg-white border-b border-gray-200 mx-6 mt-2 rounded-xl">
+        {/* <header className="p-4 flex justify-between items-center bg-white border-b border-gray-200 mx-6 mt-2 rounded-xl">
           <h1 className="text-xl">Gameface</h1>
           {name && (
             <span className="text-sm">
               Logged in as: <strong>{name}</strong>
             </span>
           )}
-        </header>
+        </header> */}
 
         {/* Main Content */}
         <main className="flex-grow overflow-auto p-4">

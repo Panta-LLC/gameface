@@ -5,7 +5,8 @@ import App from './App';
 describe('App Component', () => {
   it('renders the app header', () => {
     render(<App />);
-    const headerElement = screen.getByRole('heading', { name: /gameface/i });
+    // App now renders the initial auth header as "Welcome"
+    const headerElement = screen.getByRole('heading', { name: /welcome/i });
     expect(headerElement).toBeInTheDocument();
   });
 });

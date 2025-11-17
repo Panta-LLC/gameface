@@ -24,6 +24,10 @@ type Props = {
   // 'clear' action if needed (or by the parent calling select(null) if
   // supported).
   onSelectActivity?: (id: string | null) => void;
+  // optional layout override for activity rendering. When set to
+  // 'video-top' and the active activity is the card-table, remote
+  // videos will be shown across the top and the game board rendered
+  // below it.
 };
 
 export default function VideoCall({
@@ -45,60 +49,121 @@ export default function VideoCall({
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
-  const pcRef = useRef<RTCPeerConnection | null>(null);
+  // Manage peer connections per-remote-id for mesh calls (N>2)
+  const pcsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const [myId, setMyId] = useState<string | null>(null);
+  const myIdRef = useRef<string | null>(null);
   const signalingRef = useRef<SignalingClient | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
 
   // Initialize signaling once (defined later, moved to avoid use-before-assign lint)
 
-  const ensurePC = useCallback(() => {
-    if (pcRef.current) return pcRef.current;
-    const pc = new RTCPeerConnection(rtcConfig);
-    pcRef.current = pc;
+  // Create a new peer connection for a remote peer id. If isInitiator is true
+  // the caller will normally create an offer and send it.
+  const createPeerConnection = useCallback(
+    (remoteId: string) => {
+      if (pcsRef.current.has(remoteId)) return pcsRef.current.get(remoteId)!;
+      const pc = new RTCPeerConnection(rtcConfig);
+      console.debug('[PC] createPeerConnection for', remoteId);
 
-    pc.onicecandidate = (e) => {
-      if (e.candidate) {
-        const payload = { type: 'candidate', candidate: e.candidate };
-        console.log('[Signaling][send]', payload);
-        signalingRef.current?.sendMessage(payload);
-      }
-    };
-
-    pc.onconnectionstatechange = () => {
-      setConnectionState(pc.connectionState);
-    };
-
-    // Drive initial offer creation when tracks are added
-    pc.onnegotiationneeded = async () => {
+      // Ensure transceivers exist so negotiation includes recv/send sections even
+      // if local tracks aren't attached yet (helps prevent negotiation stalls).
       try {
-        setMakingOffer(true);
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        const payload = { type: 'offer', sdp: pc.localDescription };
-        console.log('[Signaling][send]', payload);
-        signalingRef.current?.sendMessage(payload);
+        pc.addTransceiver('video', { direction: 'sendrecv' });
+        pc.addTransceiver('audio', { direction: 'sendrecv' });
       } catch (e) {
-        console.error('Negotiation failed', e);
-        setError('Negotiation failed while creating an offer.');
-      } finally {
-        setMakingOffer(false);
+        // addTransceiver may not be supported in all browsers; ignore if it fails
       }
-    };
 
-    pc.ontrack = (e) => {
-      const [stream] = e.streams;
-      // Track stream and bind to element if already mounted
-      setRemoteStreams((prev) => {
-        if (prev[stream.id]) return prev;
-        // If a video element already exists for this id, attach immediately
-        const el = remoteVideoRefs.current[stream.id];
-        if (el && el.srcObject !== stream) el.srcObject = stream;
-        return { ...prev, [stream.id]: stream };
-      });
-    };
+      pc.onicecandidate = (e) => {
+        if (e.candidate) {
+          const payload = { type: 'candidate', candidate: e.candidate };
+          console.log('[Signaling][send] candidate ->', remoteId, payload);
+          signalingRef.current?.sendMessage(payload);
+        }
+      };
 
-    return pc;
+      pc.onconnectionstatechange = () => {
+        setConnectionState(pc.connectionState);
+      };
+
+      pc.ontrack = (e) => {
+        const [stream] = e.streams;
+        console.debug('[PC] ontrack for', remoteId, 'streams length', e.streams.length);
+        // Use remoteId as the key so we can remove the video when the peer leaves
+        setRemoteStreams((prev) => {
+          if (prev[remoteId]) return prev;
+          // If a video element already exists for this peer id, attach immediately
+          const el = remoteVideoRefs.current[remoteId];
+          if (el && el.srcObject !== stream) el.srcObject = stream;
+          return { ...prev, [remoteId]: stream };
+        });
+      };
+
+      // If we already have a local stream, add its tracks to the new peer connection
+      if (localStreamRef.current) {
+        try {
+          localStreamRef.current.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current!));
+        } catch (e) {
+          console.warn('Failed to add local tracks to new PC', e);
+        }
+      }
+
+      pcsRef.current.set(remoteId, pc);
+      return pc;
+    },
+    [],
+  );
+  
+  // Ensure local tracks are added to a PC (call after startLocal if needed)
+  const ensureLocalTracks = useCallback((pc: RTCPeerConnection) => {
+    if (!localStreamRef.current) return;
+    try {
+      const hasSendersWithTrack = pc.getSenders().some((s) => !!s.track);
+      if (!hasSendersWithTrack) {
+        localStreamRef.current.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current!));
+      }
+    } catch (e) {
+      console.warn('ensureLocalTracks error', e);
+    }
+  }, []);
+
+  // Helper: close and remove a peer connection and its associated stream/video
+  const removePeer = useCallback((remoteId: string) => {
+    const pc = pcsRef.current.get(remoteId);
+    if (pc) {
+      try {
+        pc.getSenders().forEach((s) => {
+          try {
+            s.track?.stop();
+          } catch {}
+        });
+      } catch {}
+      try {
+        pc.close();
+      } catch {}
+      pcsRef.current.delete(remoteId);
+    }
+    // remove stream entry
+    setRemoteStreams((prev) => {
+      if (!(remoteId in prev)) return prev;
+      const copy = { ...prev };
+      delete copy[remoteId];
+      return copy;
+    });
+    // remove DOM ref
+    if (remoteVideoRefs.current[remoteId]) {
+      try {
+        const el = remoteVideoRefs.current[remoteId];
+        if (el && el.srcObject) {
+          try {
+            (el.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
+          } catch {}
+        }
+      } catch {}
+      delete remoteVideoRefs.current[remoteId];
+    }
   }, []);
 
   const startLocal = useCallback(async () => {
@@ -107,6 +172,7 @@ export default function VideoCall({
       const stream =
         initialStream ?? (await navigator.mediaDevices.getUserMedia({ video: true, audio: true }));
       localStreamRef.current = stream;
+      console.debug('[Local] startLocal -> got stream', stream.id, 'tracks:', stream.getTracks().map(t=>t.kind));
       if (localVideoRef.current) localVideoRef.current.srcObject = stream;
       return stream;
     } catch (e) {
@@ -126,35 +192,94 @@ export default function VideoCall({
       on: (h: any) => signaling.onMessage(h),
     });
 
-    signaling.onMessage(async (msg) => {
+    // Message handler for multi-peer mesh. Server will include 'id' on
+    // offer/answer/candidate messages and will send a 'welcome' with our id
+    // on join.
+    const unsub = signaling.onMessage(async (msg: any) => {
       console.log('[Signaling][recv]', msg);
-      // Ensure a peer connection exists before handling messages
-      const pc = pcRef.current ?? ensurePC();
-
       try {
         switch (msg.type) {
-          case 'offer': {
-            // Prepare local if not already started
-            if (!localStreamRef.current) {
-              const stream = await startLocal();
-              stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+          case 'welcome': {
+            if (msg.id) {
+              const id = String(msg.id);
+              setMyId(id);
+              myIdRef.current = id;
             }
-            await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            signalingRef.current?.sendMessage({ type: 'answer', sdp: pc.localDescription });
+            break;
+          }
+          case 'peer-joined': {
+            // Another peer joined — create a PC and initiate an offer to them
+            const remoteId = String(msg.id);
+            if (!remoteId || remoteId === myIdRef.current) break;
+            const pc = createPeerConnection(remoteId);
+            // Ensure local stream is available and was added by createPeerConnection
+            if (!localStreamRef.current) await startLocal();
+            // make sure local tracks are attached to this pc (race fix)
+            ensureLocalTracks(pc);
+            try {
+              setMakingOffer(true);
+              const offer = await pc.createOffer();
+              await pc.setLocalDescription(offer);
+              signalingRef.current?.sendMessage({ type: 'offer', sdp: pc.localDescription });
+            } catch (e) {
+              console.error('Failed to create/send offer to', remoteId, e);
+            } finally {
+              setMakingOffer(false);
+            }
+            break;
+          }
+          case 'offer': {
+            // Incoming offer from remote peer (msg.id is their id)
+            const origin = msg.id ? String(msg.id) : null;
+            if (!origin || origin === myIdRef.current) break;
+            const pc = pcsRef.current.get(origin) ?? createPeerConnection(origin);
+            if (!localStreamRef.current) await startLocal();
+            // ensure our local tracks are attached so the answer contains them
+            ensureLocalTracks(pc);
+            try {
+              await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+              const answer = await pc.createAnswer();
+              await pc.setLocalDescription(answer);
+              signalingRef.current?.sendMessage({ type: 'answer', sdp: pc.localDescription });
+            } catch (e) {
+              console.error('Failed to handle offer from', origin, e);
+            }
             break;
           }
           case 'answer': {
-            await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-            break;
-          }
-          case 'candidate': {
-            if (msg.candidate) {
-              await pc.addIceCandidate(msg.candidate);
+            const responder = msg.id ? String(msg.id) : null;
+            if (!responder || responder === myIdRef.current) break;
+            const pc = pcsRef.current.get(responder);
+            if (pc && msg.sdp) {
+              try {
+                await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+              } catch (e) {
+                console.error('Failed to set remote description for answer from', responder, e);
+              }
             }
             break;
           }
+          case 'candidate': {
+            const sender = msg.id ? String(msg.id) : null;
+            if (!sender || sender === myIdRef.current) break;
+            const pc = pcsRef.current.get(sender);
+            if (pc && msg.candidate) {
+              try {
+                await pc.addIceCandidate(msg.candidate);
+              } catch (e) {
+                console.warn('addIceCandidate failed for', sender, e);
+              }
+            }
+            break;
+          }
+          case 'peer-left': {
+            const left = msg.id ? String(msg.id) : null;
+            if (!left) break;
+            removePeer(left);
+            break;
+          }
+          default:
+            break;
         }
       } catch (e) {
         console.error('Error handling signaling message', e);
@@ -163,12 +288,13 @@ export default function VideoCall({
     });
 
     return () => {
+      try {
+        unsub();
+      } catch {}
       signaling.close();
       setCardSignaling(null);
     };
-    // Create PC early so we don't miss early offers and wire events once
-    ensurePC();
-  }, [ensurePC, startLocal]);
+  }, [createPeerConnection, removePeer, startLocal]);
 
   useEffect(() => {
     startLocal().catch((e) => {
@@ -214,35 +340,44 @@ export default function VideoCall({
 
   const join = useCallback(async () => {
     if (!signalingRef.current) return;
-    const pc = ensurePC();
-    // Join the room BEFORE adding tracks to avoid offers being sent before the server maps the socket to the room
-    console.log('[Signaling][send] join', { room });
-    signalingRef.current.sendMessage({ type: 'join', room });
+    // Join the room. Existing peers will initiate offers to us; we only
+    // prepare our local stream so it can be attached to new peer connections
+    // when they are created.
+    console.log('[Action] join requested — acquiring local media first', { room });
     setJoined(true);
     setConnectionState('connecting');
-    const stream = await startLocal();
-    stream.getTracks().forEach((t) => pc.addTrack(t, stream));
-  }, [ensurePC, room, startLocal]);
+    await startLocal();
+    console.log('[Signaling][send] join', { room });
+    signalingRef.current.sendMessage({ type: 'join', room });
+  }, [room, startLocal]);
 
   const leave = useCallback(() => {
     setJoined(false);
     signalingRef.current?.sendMessage({ type: 'leave' });
-
-    if (pcRef.current) {
-      pcRef.current.getSenders().forEach((s) => {
+    // Close and remove all peer connections
+    try {
+      for (const [id, pc] of Array.from(pcsRef.current.entries())) {
         try {
-          s.track?.stop();
+          pc.getSenders().forEach((s) => {
+            try {
+              s.track?.stop();
+            } catch {}
+          });
         } catch {}
-      });
-      pcRef.current.close();
-      pcRef.current = null;
+        try {
+          pc.close();
+        } catch {}
+        pcsRef.current.delete(id);
+      }
+    } catch (e) {
+      console.warn('Error closing peer connections', e);
     }
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
     // Clear remote refs and streams
     Object.values(remoteVideoRefs.current).forEach((el) => {
       if (el) el.srcObject = null;
     });
-    setRemoteStreams({});
+  setRemoteStreams({});
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
@@ -270,8 +405,35 @@ export default function VideoCall({
   // SignalingClient is constructed so `on` can return a real unsubscribe.
   const [cardSignaling, setCardSignaling] = useState<SignalingClientLike | null>(null);
 
+  // Layout state: default to 'video-top' when user enters card-table, else default.
+  const [layoutState, setLayoutState] = useState<'default' | 'video-top'>(
+    activity === 'card-table' ? 'video-top' : 'default',
+  );
+
+  // Only apply the automatic default when the activity changes so we don't stomp a
+  // user's manual toggle while they're interacting.
+  const prevActivityRef = useRef<string | null>(activity);
+  useEffect(() => {
+    if (prevActivityRef.current !== activity) {
+      if (activity === 'card-table') setLayoutState('video-top');
+      else setLayoutState('default');
+      prevActivityRef.current = activity;
+    }
+  }, [activity]);
+
+  const mainClass = `vc-main ${activity ? 'has-activity' : ''} ${
+    activity === 'card-table' && layoutState === 'video-top' ? 'video-top' : ''
+  }`;
+
   return (
     <div className="vc-container">
+      {/* Debug panel: shows my assigned id and remote count to help diagnose connection issues */}
+      <div className="vc-debug" style={{position: 'fixed', right: 12, top: 12, zIndex: 9999, background: 'rgba(0,0,0,0.6)', color: 'white', padding: '6px 8px', borderRadius: 6, fontSize: 12}}>
+        <div>myId: {myId ?? '—'}</div>
+        <div>joined: {String(joined)}</div>
+        <div>conn: {connectionState}</div>
+        <div>remotes: {Object.keys(remoteStreams).length}</div>
+      </div>
       {/* <div className="vc-controls">
         <div>Connection: {connectionState}</div>
       </div> */}
@@ -284,11 +446,13 @@ export default function VideoCall({
       </div> */}
 
       {/* Remote videos across the top */}
-      <div className={`vc-main ${activity ? 'has-activity' : ''}`}>
+      <div className={mainClass}>
         <div className={`activity-wrapper open`}>
           <ActivityHost
             activity={activity ?? null}
             signalingClient={cardSignaling}
+            layout={layoutState}
+            setLayout={setLayoutState}
             onClose={() => {
               onSelectActivity?.(null);
               // keep activity gallery visible
@@ -320,23 +484,63 @@ export default function VideoCall({
                     }
                   }}
                   autoPlay
+                  muted
                   playsInline
                 />
+                <div className="vc-remote-overlay" style={{position: 'absolute', left: 8, top: 8}}>
+                  <button
+                    className="vc-unmute-btn"
+                    onClick={() => {
+                      const el = remoteVideoRefs.current[id];
+                      if (!el) return;
+                      try {
+                        el.muted = false;
+                        const p = el.play();
+                        if (p && typeof p.then === 'function') p.catch((e) => console.warn('play() rejected', e));
+                      } catch (e) {
+                        console.warn('Failed to unmute/play remote video', e);
+                      }
+                    }}
+                    aria-label="Unmute remote"
+                    title="Unmute / play"
+                  >
+                    ▶
+                  </button>
+                </div>
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Bottom toolbar: contains local video (left), room/status (center), and actions (right) */}
+      <div className="vc-bottom-toolbar" role="toolbar" aria-label="session toolbar">
+        <div className="vc-bottom-left">
           {localStream && (
-            <LocalVideoModule
-              localStream={localStream}
-              isMuted={isMuted}
-              setIsMuted={setIsMuted}
-              isCameraOff={isCameraOff}
-              toggleCamera={toggleCamera}
-              joined={joined}
-              join={join}
-              leave={leave}
-            />
+            <div className="vc-local-slot">
+              <LocalVideoModule
+                localStream={localStream}
+                isMuted={isMuted}
+                setIsMuted={setIsMuted}
+                isCameraOff={isCameraOff}
+                toggleCamera={toggleCamera}
+                joined={joined}
+                join={join}
+                leave={leave}
+              />
+            </div>
           )}
+        </div>
+        <div className="vc-bottom-center">
+          <div className="vc-session-status">
+            Room: {room} • {connectionState}
+          </div>
+        </div>
+        <div className="vc-bottom-right">
+          {/* Placeholder for future actions (mute all, settings, leave) */}
+          <button className="vc-action" onClick={() => leave()} aria-label="Leave room">
+            Leave
+          </button>
         </div>
       </div>
     </div>

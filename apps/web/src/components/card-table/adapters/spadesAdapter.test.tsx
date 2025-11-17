@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
 import { describe, it, expect, vi } from 'vitest';
 import { spadesAdapter } from './spadesAdapter';
 
@@ -73,9 +74,11 @@ describe('spadesAdapter GameBoard basic flow', () => {
       },
     };
 
-    // render the GameBoard for player 0
+    // render the GameBoard for player 0 (wrap in act to avoid warnings)
     const Board = spadesAdapter.GameBoard!;
-    render(<Board tableState={tableState} playerId={'p0'} signaling={signaling} />);
+    await act(async () => {
+      render(<Board tableState={tableState} playerId={'p0'} signaling={signaling} />);
+    });
 
     // wait for the player's hand to render (13 buttons)
     await waitFor(() => {
@@ -107,9 +110,11 @@ describe('spadesAdapter GameBoard basic flow', () => {
     // simulate the opponents sending spades.play messages, in order
     for (let i = 0; i < opponentsPlays.length; i++) {
       const c = opponentsPlays[i];
-      // call the registered handler as if received over signaling
+      // call the registered handler as if received over signaling (wrap in act)
       await waitFor(() => handler !== null);
-      handler({ type: 'spades.play', player: i + 1, card: c });
+      await act(async () => {
+        handler!({ type: 'spades.play', player: i + 1, card: c });
+      });
     }
 
     // after the trick completes, trick area should clear and at least one tricksWon should be > 0

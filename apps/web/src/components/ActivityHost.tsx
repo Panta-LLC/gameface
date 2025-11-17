@@ -12,9 +12,24 @@ type Props = {
   // Optional signaling client adapter forwarded to activity hosts that need
   // cross-client coordination (e.g. card table).
   signalingClient?: SignalingClientLike | null;
+  // layout controls provided by the parent so the activity header can
+  // expose a toggle to switch between layouts at runtime.
+  layout?: 'default' | 'video-top';
+  setLayout?: (l: 'default' | 'video-top') => void;
+  // When false, ActivityHost will not render the header toolbar — used when
+  // the surrounding app supplies a global toolbar (e.g. bottom toolbar).
+  showHeader?: boolean;
 };
 
-export default function ActivityHost({ activity, onClose, onSelect, signalingClient }: Props) {
+export default function ActivityHost({
+  activity,
+  onClose,
+  onSelect,
+  signalingClient,
+  layout = 'default',
+  setLayout,
+  showHeader = true,
+}: Props) {
   if (!activity) {
     return (
       <div className="ah-wrapper">
@@ -67,17 +82,30 @@ export default function ActivityHost({ activity, onClose, onSelect, signalingCli
 
   return (
     <div className="ah-landing">
-      <div className="pb-8">
-        <button className="ah-back-btn" onClick={() => onSelect?.(null)}>
-          ← Back to Activity Selection
-        </button>
-      </div>
-      <div className="ah-landing-header">
-        <h3 className="ah-title">Activity: {activity}</h3>
-        {/* Provide an explicit "Back to selection" control rather than a generic close
-            so the user can clearly return to the selection grid. This uses onSelect
-            to clear the current activity. */}
-      </div>
+      {showHeader && (
+        <>
+          <div className="pb-8">
+            <button className="ah-back-btn" onClick={() => onSelect?.(null)}>
+              ← Back to Activity Selection
+            </button>
+          </div>
+          <div className="ah-landing-header">
+            <h3 className="ah-title">Activity: {activity}</h3>
+            {/* Layout toggle (only shown for card-table activity) */}
+            {activity === 'card-table' && setLayout && (
+              <div>
+                <button
+                  className="ah-layout-toggle"
+                  onClick={() => setLayout(layout === 'video-top' ? 'default' : 'video-top')}
+                  aria-pressed={layout === 'video-top'}
+                >
+                  {layout === 'video-top' ? 'Videos top' : 'Videos side'}
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       <div className="ah-landing-content">{content}</div>
     </div>
