@@ -328,7 +328,11 @@ export function createSignalingServer(httpServer: Server) {
         case 'candidate': {
           const room = socketRoom.get(ws);
           if (!room) return console.warn('candidate without room');
-          broadcastToRoom(room, { type: 'candidate', candidate: data.candidate, id: socketId.get(ws) }, ws);
+          broadcastToRoom(
+            room,
+            { type: 'candidate', candidate: data.candidate, id: socketId.get(ws) },
+            ws,
+          );
           break;
         }
         case 'leave': {

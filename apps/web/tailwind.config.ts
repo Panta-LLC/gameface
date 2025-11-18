@@ -61,7 +61,20 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  // `tailwindcss-animate` is a devDependency. During some containerized builds
+  // it may not resolve the same way; guard require with a fallback no-op plugin.
+  plugins: (() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const animate = require('tailwindcss-animate');
+      return [animate];
+    } catch (err) {
+      // fallback: no-op plugin
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const noop = () => {};
+      return [noop];
+    }
+  })(),
 };
 
 export default config;

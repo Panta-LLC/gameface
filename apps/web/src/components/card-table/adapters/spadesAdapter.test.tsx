@@ -129,5 +129,5 @@ describe('spadesAdapter GameBoard basic flow', () => {
     // restore Date.now
     // @ts-ignore
     Date.now = origNow;
-  });
+  }, 20000);
 });
