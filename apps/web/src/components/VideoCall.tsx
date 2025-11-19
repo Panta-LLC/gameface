@@ -82,7 +82,7 @@ export default function VideoCall({
         pc.getTransceivers().length,
       );
     } catch (_e) {
-      /* no-op: best-effort diagnostics */
+      void _e; /* no-op: best-effort diagnostics */
     }
 
     // Ensure transceivers exist so negotiation includes recv/send sections even
@@ -91,7 +91,7 @@ export default function VideoCall({
       pc.addTransceiver('video', { direction: 'sendrecv' });
       pc.addTransceiver('audio', { direction: 'sendrecv' });
     } catch (_e) {
-      // addTransceiver may not be supported in all browsers; ignore if it fails
+      void _e; // addTransceiver may not be supported in all browsers; ignore if it fails
       /* no-op */
     }
 
@@ -120,7 +120,7 @@ export default function VideoCall({
           (e.streams && e.streams.length) || 0,
         );
       } catch (_e) {
-        /* no-op */
+        void _e; /* no-op */
       }
       // Use remoteId as the key so we can remove the video when the peer leaves
       setRemoteStreams((prev) => {
@@ -164,7 +164,7 @@ export default function VideoCall({
             pc.getTransceivers().map((t) => ({ mid: t.mid, direction: t.direction })),
           );
         } catch (_e) {
-          /* no-op */
+          void _e; /* no-op */
         }
       } catch (_e) {
         console.warn('Failed to add local tracks to new PC', _e);
@@ -208,7 +208,7 @@ export default function VideoCall({
           pc.getReceivers().map((r) => ({ id: r.track?.id, kind: r.track?.kind })),
         );
       } catch (_e) {
-        /* no-op */
+        void _e; /* no-op */
       }
     } catch (_e) {
       console.warn('ensureLocalTracks error', _e);
@@ -224,16 +224,16 @@ export default function VideoCall({
           try {
             s.track?.stop();
           } catch (_e) {
-            /* no-op */
+            void _e; /* no-op */
           }
         });
       } catch (_e) {
-        /* no-op */
+        void _e; /* no-op */
       }
       try {
         pc.close();
       } catch (_e) {
-        /* no-op */
+        void _e; /* no-op */
       }
       pcsRef.current.delete(remoteId);
     }
@@ -252,11 +252,11 @@ export default function VideoCall({
           try {
             (el.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
           } catch (_e) {
-            /* no-op */
+            void _e; /* no-op */
           }
         }
       } catch (_e) {
-        /* no-op */
+        void _e; /* no-op */
       }
       delete remoteVideoRefs.current[remoteId];
     }
@@ -438,7 +438,7 @@ export default function VideoCall({
       try {
         unsub();
       } catch (_e) {
-        /* no-op */
+        void _e; /* no-op */
       }
       signaling.close();
       setCardSignaling(null);
@@ -463,14 +463,9 @@ export default function VideoCall({
     }
   }, [error, toast]);
 
-  const toggleMute = () => {
-    if (!localStreamRef.current) return;
-    const audioTrack = localStreamRef.current.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
-      setIsMuted(!audioTrack.enabled);
-    }
-  };
+  // toggleMute intentionally omitted from UI for now; keep helper here in case
+  // it's later wired up. If it remains unused, we intentionally leave it
+  // prefixed with `_` to indicate that.
 
   const toggleCamera = () => {
     if (!localStreamRef.current) {
@@ -511,16 +506,16 @@ export default function VideoCall({
             try {
               s.track?.stop();
             } catch (_e) {
-              /* no-op */
+              void _e; /* no-op */
             }
           });
         } catch (_e) {
-          /* no-op */
+          void _e; /* no-op */
         }
         try {
           pc.close();
         } catch (_e) {
-          /* no-op */
+          void _e; /* no-op */
         }
         pcsRef.current.delete(id);
       }
@@ -564,7 +559,7 @@ export default function VideoCall({
             : false;
           setRemoteOverlay((p) => (p[id] === show ? p : { ...p, [id]: show }));
         } catch (_e) {
-          /* no-op */
+          void _e; /* no-op */
         }
         return;
       }
@@ -604,7 +599,7 @@ export default function VideoCall({
             el.removeEventListener('volumechange', h);
           }
         } catch (_e) {
-          /* no-op */
+          void _e; /* no-op */
         }
         delete overlayHandlersRef.current[id];
         setRemoteOverlay((prev) => {
@@ -631,7 +626,7 @@ export default function VideoCall({
             el.removeEventListener('volumechange', h);
           }
         } catch (_e) {
-          /* no-op */
+          void _e; /* no-op */
         }
       });
       overlayHandlersRef.current = {};

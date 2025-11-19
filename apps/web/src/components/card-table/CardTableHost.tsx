@@ -50,7 +50,6 @@ export default function CardTableHost({
     leaveSeat,
     attemptStart,
     selectGame,
-    send: _send,
     signalingClient: client,
   } = useCardTable({ signaling: signalingClient, initialGame, currentPlayerId: me });
 

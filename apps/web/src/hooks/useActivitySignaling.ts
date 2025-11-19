@@ -12,7 +12,7 @@ export function useActivitySignaling(room: string | null) {
       try {
         clientRef.current.close();
       } catch (_e) {
-        /* no-op */
+        void _e; /* no-op */
       }
       clientRef.current = null;
     }
@@ -30,7 +30,8 @@ export function useActivitySignaling(room: string | null) {
     });
     client.onMessage((msg) => {
       if (msg.type === 'activity-selected') {
-        setActivity(msg.activity || null);
+        const act = typeof msg.activity === 'string' ? msg.activity : null;
+        setActivity(act);
       }
     });
     return () => client.close();

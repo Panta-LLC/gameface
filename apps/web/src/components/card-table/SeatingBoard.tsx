@@ -21,8 +21,6 @@ export default function SeatingBoard({
   gameDef,
   pendingSeat,
 }: Props): React.ReactElement {
-  const isHost = tableState.hostId === currentPlayerId;
-
   return (
     <div className="ct-seating" style={{ padding: 12 }}>
       <h3 style={{ marginTop: 0 }}>{gameDef.name} — Seating</h3>

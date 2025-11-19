@@ -25,7 +25,7 @@ type Props = {
 
 export default function ActivityHost({
   activity,
-  onClose,
+  onClose: _onClose,
   onSelect,
   signalingClient,
   layout = 'default',
