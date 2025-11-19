@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname "$0")/_/husky.sh"
-
 # Run quick auto-fixes on staged files, then run full workspace checks and fail the push on errors.
 fail=0
 
