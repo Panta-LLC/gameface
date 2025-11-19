@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import './VideoCall.css';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';

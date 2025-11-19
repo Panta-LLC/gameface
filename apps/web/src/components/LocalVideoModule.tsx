@@ -33,7 +33,7 @@ export default function LocalVideoModule({
         muted
         playsInline
         ref={(v) => {
-          if (v && localStream) v.srcObject = localStream as any;
+          if (v && localStream) v.srcObject = localStream;
         }}
       />
       <div className="local-video-actions" role="toolbar" aria-orientation="horizontal">
