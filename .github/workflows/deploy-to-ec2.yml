@@ -32,7 +32,10 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v4
         with:
-          context: ${{ github.event.inputs.context || github.event.workflow_dispatch.inputs.context || 'apps/api' }}
+          # use repo root as context so root-level tsconfig and shared files are available
+          context: ${{ github.event.inputs.context || '.' }}
+          # point to the Dockerfile for the api app while keeping the root as context
+          file: ./apps/api/Dockerfile
           push: true
           tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 

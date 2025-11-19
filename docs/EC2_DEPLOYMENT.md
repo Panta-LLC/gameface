@@ -40,6 +40,10 @@ Triggering with a different build context
 
 - Use the workflow dispatch input `context` to point the build to `apps/signaling` or `web` if you prefer to build/deploy a different service.
 
+Note about build context
+
+- The workflow now uses the repository root as the Docker build `context` and explicitly points the Dockerfile at `./apps/api/Dockerfile`. This ensures shared root files (for example `tsconfig.base.json`) are available during the Docker build while keeping the API Dockerfile location unchanged.
+
 Security considerations
 
 - Keep the `EC2_SSH_PRIVATE_KEY` secret and rotate keys periodically.
