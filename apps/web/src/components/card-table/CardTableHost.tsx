@@ -42,6 +42,7 @@ export default function CardTableHost({
     [initialGameId],
   );
   const [pendingVariantGame, setPendingVariantGame] = useState<GameDef | null>(null);
+
   const {
     tableState,
     pendingSeatClaim,
@@ -49,7 +50,7 @@ export default function CardTableHost({
     leaveSeat,
     attemptStart,
     selectGame,
-    _send,
+    send: _send,
     signalingClient: client,
   } = useCardTable({ signaling: signalingClient, initialGame, currentPlayerId: me });
 

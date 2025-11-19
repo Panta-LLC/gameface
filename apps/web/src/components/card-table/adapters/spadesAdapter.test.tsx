@@ -60,7 +60,6 @@ describe('spadesAdapter GameBoard basic flow', () => {
     // fix Date.now so the adapter's seed is deterministic
     const FIXED = 123456789;
     const origNow = Date.now;
-    // @ts-expect-error - overridden for deterministic seed in test
     Date.now = () => FIXED;
 
     try {
@@ -132,7 +131,6 @@ describe('spadesAdapter GameBoard basic flow', () => {
       });
     } finally {
       // restore Date.now even if assertions fail
-      // @ts-expect-error - restoring original Date.now
       Date.now = origNow;
     }
   }, 20000);
