@@ -67,7 +67,7 @@ It shows: Users -> CloudFront/CDN (static assets) -> ALB -> ECS cluster hosting 
 
 ## CI/CD (recommended GitHub Actions flow)
 
-1. Pull request triggers unit tests (Vitest) for changed packages. Use a monorepo-aware matrix job that runs `pnpm -w -F @gameface/web test` etc.
+1. Pull request triggers unit tests (Vitest) for changed packages. Use a monorepo-aware matrix job that runs `npm run -w @gameface/web test` etc.
 2. On merge to `main` (or `release`): build Docker images for `api` and `signaling` and a static web build artifact.
 3. Run integration smoke tests (optional). Publish images to GHCR with tags: `ghcr.io/<org>/gameface-api:sha-<short>` and `...-signaling:sha-<short>`.
 4. Optionally, deploy to staging ECS via `aws ecs update-service` (use iam role + secrets). Promote to production after verification.
@@ -177,7 +177,7 @@ This section provides a concise, copy-paste friendly guide to deploy the monorep
 - AWS account with permissions for ECR, ECS, IAM, VPC, ALB, Route53, ACM, Secrets Manager.
 - `aws` CLI configured (`aws configure`) and region set.
 - `docker` installed and running locally.
-- `pnpm` installed (repo uses pnpm).
+- `npm` installed (repo uses npm).
 - `terraform` installed if you plan to manage infra as code.
 
 Quick checks:
@@ -186,7 +186,7 @@ Quick checks:
 aws sts get-caller-identity
 aws configure get region
 docker --version
-pnpm --version
+npm --version
 ```
 
 ### 1) Inventory services to deploy
@@ -208,11 +208,10 @@ Create a `Dockerfile` in each service folder. Minimal production multi-stage Nod
 ```
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm i -g pnpm
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
-RUN pnpm install --frozen-lockfile
-RUN pnpm run build
+RUN npm run build
 
 FROM node:20-alpine AS runtime
 WORKDIR /app
@@ -228,11 +227,10 @@ For the `web` (static build) you can use a static server or build to a `dist/` a
 ```
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm i -g pnpm
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
-RUN pnpm install --frozen-lockfile
-RUN pnpm run build
+RUN npm run build
 
 FROM nginx:stable-alpine AS runtime
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -257,7 +255,7 @@ docker run --rm -e MONGO_URI="mongodb://..." -p 3000:3000 gameface-api:local
 Run unit tests first via monorepo scripts (example):
 
 ```bash
-pnpm -w test
+npm test
 ```
 
 ### 4) Create ECR repos & push images (example)
@@ -324,10 +322,10 @@ resource "aws_ecs_task_definition" "api" {
 
 ### 7) DNS & TLS
 
-- Use Route53 hosted zone and ACM certificate (request cert and use DNS validation). For CloudFront, request ACM cert in `us-east-1`.
+- Use Route53 hosted zone and ACM certificate (request cert and use DNS validation). For CloudFront, request ACM cert in `us-west-2`.
 
 ```bash
-aws acm request-certificate --domain-name example.com --validation-method DNS --region us-east-1
+aws acm request-certificate --domain-name example.com --validation-method DNS --region us-west-2
 ```
 
 Terraform can automate DNS validation and Route53 record creation.
