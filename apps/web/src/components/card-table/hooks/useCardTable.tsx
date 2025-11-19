@@ -36,7 +36,18 @@ type UseCardTableOptions = {
   currentPlayerId: string;
 };
 
-export function useCardTable({ signaling, initialGame, currentPlayerId }: UseCardTableOptions) {
+export function useCardTable({ signaling, initialGame, currentPlayerId }: UseCardTableOptions): {
+  tableState: TableState | null;
+  pendingSeatClaim: number | null;
+  takeSeat: (seatIndex: number) => void;
+  leaveSeat: (seatIndex: number) => void;
+  attemptStart: (adapter?: {
+    validateStart?: (s: TableState) => { ok: boolean; reason?: string };
+  }) => { ok: boolean; reason?: string } | void;
+  selectGame: (gameDef: GameDef | null) => void;
+  send: (msg: any) => void;
+  signalingClient: SignalingClientLike;
+} {
   const [tableState, setTableState] = useState<TableState | null>(() => {
     if (initialGame) return initEmptyTable(initialGame.id, initialGame.players, currentPlayerId);
     return null;
@@ -48,10 +59,8 @@ export function useCardTable({ signaling, initialGame, currentPlayerId }: UseCar
   useEffect(() => {
     signalingRef.current = signaling ?? null;
     let subscriber: (() => void) | undefined;
-    if (signaling?.on) subscriber = signaling.on((msg: any) => handleSignal(msg));
-    const localUnsub = !signaling ? globalCardTableBus.on(handleSignal) : undefined;
 
-    function handleSignal(msg: any) {
+    const handleSignal = (msg: any) => {
       if (!msg || typeof msg !== 'object') return;
       switch (msg.type) {
         case 'cardtable.seat.update':
@@ -64,7 +73,10 @@ export function useCardTable({ signaling, initialGame, currentPlayerId }: UseCar
         default:
           break;
       }
-    }
+    };
+
+    if (signaling?.on) subscriber = signaling.on((msg: any) => handleSignal(msg));
+    const localUnsub = !signaling ? globalCardTableBus.on(handleSignal) : undefined;
 
     return () => {
       if (subscriber) subscriber();
