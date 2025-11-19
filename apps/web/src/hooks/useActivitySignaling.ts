@@ -11,7 +11,9 @@ export function useActivitySignaling(room: string | null) {
     if (clientRef.current) {
       try {
         clientRef.current.close();
-      } catch {}
+      } catch (_e) {
+        /* no-op */
+      }
       clientRef.current = null;
     }
 

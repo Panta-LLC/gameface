@@ -80,15 +80,18 @@ export default function VideoCall({
         'transceivers:',
         pc.getTransceivers().length,
       );
-    } catch (e) {}
+    } catch (_e) {
+      /* no-op: best-effort diagnostics */
+    }
 
     // Ensure transceivers exist so negotiation includes recv/send sections even
     // if local tracks aren't attached yet (helps prevent negotiation stalls).
     try {
       pc.addTransceiver('video', { direction: 'sendrecv' });
       pc.addTransceiver('audio', { direction: 'sendrecv' });
-    } catch (e) {
+    } catch (_e) {
       // addTransceiver may not be supported in all browsers; ignore if it fails
+      /* no-op */
     }
 
     pc.onicecandidate = (e) => {
@@ -115,7 +118,9 @@ export default function VideoCall({
           'streams length',
           (e.streams && e.streams.length) || 0,
         );
-      } catch {}
+      } catch (_e) {
+        /* no-op */
+      }
       // Use remoteId as the key so we can remove the video when the peer leaves
       setRemoteStreams((prev) => {
         // If we already have a stream object for this peer and it's the same
@@ -130,37 +135,39 @@ export default function VideoCall({
 
     // If we already have a local stream, add its tracks to the new peer connection
     if (localStreamRef.current) {
-      try {
-        console.debug(
-          '[PC] adding local tracks to pc for',
-          remoteId,
-          'tracks:',
-          localStreamRef.current.getTracks().map((t) => t.kind),
-        );
-        localStreamRef.current.getTracks().forEach((t) => {
-          try {
-            const sender = pc.addTrack(t, localStreamRef.current!);
-            console.debug(
-              '[PC] added track',
-              t.kind,
-              'sender track id:',
-              sender?.track?.id ?? '(no id)',
-            );
-          } catch (e) {
-            console.warn('[PC] addTrack failed for', t.kind, e);
-          }
-        });
         try {
           console.debug(
-            '[PC] after addTrack senders:',
-            pc.getSenders().map((s) => ({ id: s.track?.id, kind: s.track?.kind })),
-            'transceivers:',
-            pc.getTransceivers().map((t) => ({ mid: t.mid, direction: t.direction })),
+            '[PC] adding local tracks to pc for',
+            remoteId,
+            'tracks:',
+            localStreamRef.current.getTracks().map((t) => t.kind),
           );
-        } catch (e) {}
-      } catch (e) {
-        console.warn('Failed to add local tracks to new PC', e);
-      }
+          localStreamRef.current.getTracks().forEach((t) => {
+            try {
+              const sender = pc.addTrack(t, localStreamRef.current!);
+              console.debug(
+                '[PC] added track',
+                t.kind,
+                'sender track id:',
+                sender?.track?.id ?? '(no id)',
+              );
+            } catch (_e) {
+              console.warn('[PC] addTrack failed for', t.kind, _e);
+            }
+          });
+          try {
+            console.debug(
+              '[PC] after addTrack senders:',
+              pc.getSenders().map((s) => ({ id: s.track?.id, kind: s.track?.kind })),
+              'transceivers:',
+              pc.getTransceivers().map((t) => ({ mid: t.mid, direction: t.direction })),
+            );
+          } catch (_e) {
+            /* no-op */
+          }
+        } catch (_e) {
+          console.warn('Failed to add local tracks to new PC', _e);
+        }
     }
 
     pcsRef.current.set(remoteId, pc);
@@ -170,39 +177,41 @@ export default function VideoCall({
   // Ensure local tracks are added to a PC (call after startLocal if needed)
   const ensureLocalTracks = useCallback((pc: RTCPeerConnection) => {
     if (!localStreamRef.current) return;
-    try {
-      console.debug(
-        '[PC] ensureLocalTracks before:',
-        pc.getSenders().map((s) => ({ id: s.track?.id, kind: s.track?.kind })),
-      );
-      const hasSendersWithTrack = pc.getSenders().some((s) => !!s.track);
-      if (!hasSendersWithTrack) {
-        console.debug('[PC] no senders with tracks detected — adding local tracks');
-        localStreamRef.current.getTracks().forEach((t) => {
-          try {
-            const sender = pc.addTrack(t, localStreamRef.current!);
-            console.debug(
-              '[PC] ensureLocalTracks added',
-              t.kind,
-              'sender track id:',
-              sender?.track?.id ?? '(no id)',
-            );
-          } catch (e) {
-            console.warn('ensureLocalTracks addTrack failed', e);
-          }
-        });
-      }
       try {
         console.debug(
-          '[PC] ensureLocalTracks after:',
+          '[PC] ensureLocalTracks before:',
           pc.getSenders().map((s) => ({ id: s.track?.id, kind: s.track?.kind })),
-          'receivers:',
-          pc.getReceivers().map((r) => ({ id: r.track?.id, kind: r.track?.kind })),
         );
-      } catch (e) {}
-    } catch (e) {
-      console.warn('ensureLocalTracks error', e);
-    }
+        const hasSendersWithTrack = pc.getSenders().some((s) => !!s.track);
+        if (!hasSendersWithTrack) {
+          console.debug('[PC] no senders with tracks detected — adding local tracks');
+          localStreamRef.current.getTracks().forEach((t) => {
+            try {
+              const sender = pc.addTrack(t, localStreamRef.current!);
+              console.debug(
+                '[PC] ensureLocalTracks added',
+                t.kind,
+                'sender track id:',
+                sender?.track?.id ?? '(no id)',
+              );
+            } catch (_e) {
+              console.warn('ensureLocalTracks addTrack failed', _e);
+            }
+          });
+        }
+        try {
+          console.debug(
+            '[PC] ensureLocalTracks after:',
+            pc.getSenders().map((s) => ({ id: s.track?.id, kind: s.track?.kind })),
+            'receivers:',
+            pc.getReceivers().map((r) => ({ id: r.track?.id, kind: r.track?.kind })),
+          );
+        } catch (_e) {
+          /* no-op */
+        }
+      } catch (_e) {
+        console.warn('ensureLocalTracks error', _e);
+      }
   }, []);
 
   // Helper: close and remove a peer connection and its associated stream/video
