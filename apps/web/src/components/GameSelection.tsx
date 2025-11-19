@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
 import './GameSelection.css';
+
+import React, { useEffect,useState } from 'react';
+
 import SignalingClient from '../webrtc/SignalingClient';
 
 const games = [

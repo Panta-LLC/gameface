@@ -1,4 +1,5 @@
 import React from 'react';
+
 import type { GameAdapter, TableState } from './types';
 
 type Props = {

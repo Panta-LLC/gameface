@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { GameAdapter } from '../types';
+
 import SpadesRules from '../rules/spadesRules';
+import type { GameAdapter } from '../types';
 
 // Minimal card utilities for a 52-card deck
 const SUITS = ['S', 'H', 'D', 'C'];

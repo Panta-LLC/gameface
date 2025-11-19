@@ -11,13 +11,13 @@ How to use (local):
    ```sh
    cd terraform
    terraform init
-   terraform plan -var="aws_region=us-east-1"
+   terraform plan -var="aws_region=us-west-2"
    ```
 
 3. Apply (this will create ECR repos and an ECS cluster):
 
    ```sh
-   terraform apply -var="aws_region=us-east-1" -auto-approve
+   terraform apply -var="aws_region=us-west-2" -auto-approve
    ```
 
 Notes and next steps:

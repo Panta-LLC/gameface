@@ -1,4 +1,28 @@
 #!/usr/bin/env sh
 . "$(dirname "$0")/_/husky.sh"
 
-npm run -ws lint --if-present && npm run -ws typecheck --if-present && npm run -ws test --if-present
+# Run quick auto-fixes on staged files, then run full workspace checks and fail the push on errors.
+fail=0
+
+# Auto-fix staged files (fast)
+if command -v npx >/dev/null 2>&1; then
+	npx lint-staged || { echo "Error: lint-staged failed"; fail=1; }
+else
+	echo "npx not found; skipping lint-staged auto-fix"
+fi
+
+# Run full workspace lint and treat warnings as failures
+npm run -ws lint --if-present -- --max-warnings=0 || { fail=1; echo "Error: workspace lint failed (pre-push)"; }
+
+# Typecheck (must pass)
+npm run -ws typecheck --if-present || { fail=1; echo "Error: workspace typecheck failed (pre-push)"; }
+
+# Run tests once (non-watch)
+npm run -ws test --if-present -- --run || { fail=1; echo "Error: workspace tests failed (pre-push)"; }
+
+if [ "$fail" -ne 0 ]; then
+	echo "Pre-push checks reported errors; push will be blocked. Fix locally and retry."
+	exit 1
+fi
+
+exit 0

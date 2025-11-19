@@ -57,7 +57,7 @@ Attach whichever policy fits your security model. For early testing you can use 
 - In the repository, go to `Settings` → `Secrets and variables` → `Actions` → `New repository secret`.
 - Add the following secrets used by the workflow:
   - `AWS_ROLE_ARN` — ARN of the IAM role you created for GitHub Actions (if using OIDC). If you used access keys instead, add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` instead of `AWS_ROLE_ARN`.
-  - `AWS_REGION` — e.g. `us-east-1`.
+  - `AWS_REGION` — e.g. `us-west-2`.
   - `APP_NAME` — used by the Terraform variables and ECR repo naming (default `gameface`).
 
 If you prefer using AWS access keys (less recommended):
@@ -71,7 +71,7 @@ If you prefer using AWS access keys (less recommended):
 
 ```bash
 chmod +x ./scripts/push-to-ecr.sh
-./scripts/push-to-ecr.sh us-east-1 gameface
+./scripts/push-to-ecr.sh us-west-2 gameface
 ```
 
 This will create ECR repos if missing and attempt to push any local images named `gameface-api`, `gameface-signaling`, `gameface-web`.

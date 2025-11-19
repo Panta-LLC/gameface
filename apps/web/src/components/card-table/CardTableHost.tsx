@@ -1,12 +1,13 @@
-import React, { useMemo, useState } from 'react';
-import type { GameDef } from './types';
-import { spadesAdapter } from './adapters/spadesAdapter';
+import './CardTable.css';
 
+import React, { useMemo, useState } from 'react';
+
+import { spadesAdapter } from './adapters/spadesAdapter';
 import CardGameSelector from './CardGameSelector';
-import SeatingBoard from './SeatingBoard';
 import GameBoardWrapper from './GameBoardWrapper';
 import { useCardTable } from './hooks/useCardTable';
-import './CardTable.css';
+import SeatingBoard from './SeatingBoard';
+import type { GameDef } from './types';
 
 const GAMES: GameDef[] = [
   {

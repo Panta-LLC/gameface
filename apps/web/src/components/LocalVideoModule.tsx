@@ -1,6 +1,7 @@
-import React from 'react';
 import './LocalVideoModule.css';
+
 import { MicrophoneIcon, VideoCameraIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import React from 'react';
 
 type Props = {
   localStream: MediaStream | null | undefined;

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Button } from './components/ui/button';
-import VideoCall from './components/VideoCall';
-import RoomGate from './components/RoomGate';
+
 import AuthGate from './components/AuthGate';
+import RoomGate from './components/RoomGate';
 import { ToastProvider } from './components/Toast';
+import VideoCall from './components/VideoCall';
 // Activity selection moved into the activity column/gallery handled inside VideoCall
 // and ActivityHost. Sidebar removed.
 import { useActivitySignaling } from './hooks/useActivitySignaling';

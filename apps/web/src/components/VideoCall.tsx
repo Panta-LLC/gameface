@@ -1,9 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { SignalingClientLike } from './card-table/types';
-import SignalingClient from '../webrtc/SignalingClient';
-import LocalVideoModule from './LocalVideoModule';
-import ActivityHost from './ActivityHost';
 import './VideoCall.css';
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import SignalingClient from '../webrtc/SignalingClient';
+import ActivityHost from './ActivityHost';
+import type { SignalingClientLike } from './card-table/types';
+import LocalVideoModule from './LocalVideoModule';
 import { useToast } from './Toast';
 
 const SIGNALING_URL = 'ws://localhost:3001';

@@ -1,9 +1,9 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
-import SeatingBoard from './SeatingBoard';
-import SpadesRules from './rules/spadesRules';
+import React from 'react';
+import { describe, expect,it } from 'vitest';
 
+import SpadesRules from './rules/spadesRules';
+import SeatingBoard from './SeatingBoard';
 import type { TableState } from './types';
 
 describe('SeatingBoard rules', () => {

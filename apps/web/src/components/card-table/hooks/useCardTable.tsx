@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import type { TableState, Seat, SignalingClientLike, GameDef } from '../types';
+
+import type { GameDef,Seat, SignalingClientLike, TableState } from '../types';
 
 // Simple in-memory event bus used when no signaling client is provided.
 const globalCardTableBus = (() => {

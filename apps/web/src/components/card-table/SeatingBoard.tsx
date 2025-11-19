@@ -1,5 +1,6 @@
 import React from 'react';
-import type { TableState, GameDef } from './types';
+
+import type { GameDef,TableState } from './types';
 
 type Props = {
   tableState: TableState;
