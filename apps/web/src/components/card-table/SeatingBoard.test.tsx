@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import SpadesRules from './rules/spadesRules';
 import SeatingBoard from './SeatingBoard';
-import type { TableState } from './types';
+import type { GameDef, TableState } from './types';
 
 describe('SeatingBoard rules', () => {
   it('renders the adapter-provided rules component when present', () => {
@@ -15,7 +15,7 @@ describe('SeatingBoard rules', () => {
       hostId: 'host',
     };
 
-    const gameDef: any = {
+    const gameDef: GameDef = {
       id: 'spades',
       name: 'Spades',
       players: 4,

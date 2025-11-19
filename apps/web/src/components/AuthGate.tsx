@@ -15,8 +15,9 @@ export default function AuthGate({ onGranted }: Props) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       onGranted({ name: name.trim() || 'Player', stream });
-    } catch (e: any) {
-      setError(e?.message || 'Failed to access camera/microphone.');
+    } catch (e) {
+      const err = e as Error | undefined;
+      setError(err?.message || 'Failed to access camera/microphone.');
     } finally {
       setPending(false);
     }

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-empty, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import './VideoCall.css';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -223,12 +223,18 @@ export default function VideoCall({
         pc.getSenders().forEach((s) => {
           try {
             s.track?.stop();
-          } catch {}
+          } catch (_e) {
+            /* no-op */
+          }
         });
-      } catch {}
+      } catch (_e) {
+        /* no-op */
+      }
       try {
         pc.close();
-      } catch {}
+      } catch (_e) {
+        /* no-op */
+      }
       pcsRef.current.delete(remoteId);
     }
     // remove stream entry
@@ -245,9 +251,13 @@ export default function VideoCall({
         if (el && el.srcObject) {
           try {
             (el.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
-          } catch {}
+          } catch (_e) {
+            /* no-op */
+          }
         }
-      } catch {}
+      } catch (_e) {
+        /* no-op */
+      }
       delete remoteVideoRefs.current[remoteId];
     }
   }, []);
@@ -427,7 +437,9 @@ export default function VideoCall({
     return () => {
       try {
         unsub();
-      } catch {}
+      } catch (_e) {
+        /* no-op */
+      }
       signaling.close();
       setCardSignaling(null);
     };
@@ -498,12 +510,18 @@ export default function VideoCall({
           pc.getSenders().forEach((s) => {
             try {
               s.track?.stop();
-            } catch {}
+            } catch (_e) {
+              /* no-op */
+            }
           });
-        } catch {}
+        } catch (_e) {
+          /* no-op */
+        }
         try {
           pc.close();
-        } catch {}
+        } catch (_e) {
+          /* no-op */
+        }
         pcsRef.current.delete(id);
       }
     } catch (e) {
@@ -545,7 +563,9 @@ export default function VideoCall({
             ? el.paused || el.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA || el.muted
             : false;
           setRemoteOverlay((p) => (p[id] === show ? p : { ...p, [id]: show }));
-        } catch {}
+        } catch (_e) {
+          /* no-op */
+        }
         return;
       }
 
@@ -583,7 +603,9 @@ export default function VideoCall({
             el.removeEventListener('loadeddata', h);
             el.removeEventListener('volumechange', h);
           }
-        } catch {}
+        } catch (_e) {
+          /* no-op */
+        }
         delete overlayHandlersRef.current[id];
         setRemoteOverlay((prev) => {
           if (!(id in prev)) return prev;
@@ -608,7 +630,9 @@ export default function VideoCall({
             el.removeEventListener('loadeddata', h);
             el.removeEventListener('volumechange', h);
           }
-        } catch {}
+        } catch (_e) {
+          /* no-op */
+        }
       });
       overlayHandlersRef.current = {};
     };
