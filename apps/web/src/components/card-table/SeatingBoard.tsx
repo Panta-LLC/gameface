@@ -20,7 +20,7 @@ export default function SeatingBoard({
   onStartGame,
   gameDef,
   pendingSeat,
-}: Props) {
+}: Props): React.ReactElement {
   const isHost = tableState.hostId === currentPlayerId;
 
   return (
