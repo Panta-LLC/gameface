@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Types for the card table module
 export type GameId = string;
 export type PlayerId = string;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from 'react';
 
 import type { GameDef, Seat, SignalingClientLike, TableState } from '../types';
@@ -46,7 +47,8 @@ export function useCardTable({ signaling, initialGame, currentPlayerId }: UseCar
 
   useEffect(() => {
     signalingRef.current = signaling ?? null;
-    const subscriber = signaling?.on?.((msg) => handleSignal(msg));
+    let subscriber: (() => void) | undefined;
+    if (signaling?.on) subscriber = signaling.on((msg: any) => handleSignal(msg));
     const localUnsub = !signaling ? globalCardTableBus.on(handleSignal) : undefined;
 
     function handleSignal(msg: any) {
@@ -65,8 +67,8 @@ export function useCardTable({ signaling, initialGame, currentPlayerId }: UseCar
     }
 
     return () => {
-      subscriber && subscriber();
-      localUnsub && localUnsub();
+      if (subscriber) subscriber();
+      if (localUnsub) localUnsub();
     };
   }, [signaling]);
 

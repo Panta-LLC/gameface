@@ -7,7 +7,7 @@ import CardGameSelector from './CardGameSelector';
 import GameBoardWrapper from './GameBoardWrapper';
 import { useCardTable } from './hooks/useCardTable';
 import SeatingBoard from './SeatingBoard';
-import type { GameDef } from './types';
+import type { GameDef, SignalingClientLike } from './types';
 
 const GAMES: GameDef[] = [
   {
@@ -25,7 +25,7 @@ const GAMES: GameDef[] = [
 
 type Props = {
   currentPlayerId?: string;
-  signalingClient?: any;
+  signalingClient?: SignalingClientLike | null;
   initialGameId?: string | null;
   onClose?: () => void;
 };

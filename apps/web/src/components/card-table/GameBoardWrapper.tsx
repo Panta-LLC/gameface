@@ -1,12 +1,12 @@
 import React from 'react';
 
-import type { GameAdapter, TableState } from './types';
+import type { GameAdapter, TableState, SignalingClientLike } from './types';
 
 type Props = {
   adapter?: GameAdapter;
   tableState: TableState;
   playerId: string;
-  signaling: any;
+  signaling: SignalingClientLike | null;
 };
 
 export default function GameBoardWrapper({ adapter, tableState, playerId, signaling }: Props) {
