@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type { GameAdapter, TableState, SignalingClientLike } from './types';
+import type { GameAdapter, SignalingClientLike, TableState } from './types';
 
 type Props = {
   adapter?: GameAdapter;
@@ -9,7 +9,12 @@ type Props = {
   signaling: SignalingClientLike | null;
 };
 
-export default function GameBoardWrapper({ adapter, tableState, playerId, signaling }: Props) {
+export default function GameBoardWrapper({
+  adapter,
+  tableState,
+  playerId,
+  signaling,
+}: Props): React.ReactElement {
   if (!adapter) return <div style={{ padding: 12 }}>No adapter provided for this game.</div>;
   const Board = adapter.GameBoard;
   if (Board) return <Board tableState={tableState} playerId={playerId} signaling={signaling} />;

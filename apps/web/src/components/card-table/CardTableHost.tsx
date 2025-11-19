@@ -35,7 +35,7 @@ export default function CardTableHost({
   signalingClient,
   initialGameId,
   onClose,
-}: Props) {
+}: Props): React.ReactElement {
   const me = currentPlayerId ?? 'guest';
   const initialGame = useMemo(
     () => GAMES.find((g) => g.id === initialGameId) ?? null,
@@ -49,7 +49,7 @@ export default function CardTableHost({
     leaveSeat,
     attemptStart,
     selectGame,
-    send,
+    _send,
     signalingClient: client,
   } = useCardTable({ signaling: signalingClient, initialGame, currentPlayerId: me });
 
@@ -76,7 +76,7 @@ export default function CardTableHost({
           <div style={{ padding: 12 }}>
             <h4 style={{ marginTop: 0 }}>Choose players</h4>
             <div style={{ display: 'flex', gap: 8 }}>
-              {pendingVariantGame.playersOptions!.map((opt) => (
+              {pendingVariantGame.playersOptions!.map((opt: number) => (
                 <button
                   key={opt}
                   onClick={() => {
