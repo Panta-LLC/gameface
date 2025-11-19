@@ -46,10 +46,12 @@ describe('join-time sync', () => {
     await new Promise<void>((resolve) => b.on('open', resolve));
 
     // B will join the room and should receive at least game-selected and activity-selected
+    // Note: server always sends a `welcome` message on join, so wait for 3
+    // messages then filter out the welcome before asserting the selections.
     b.send(JSON.stringify({ type: 'join', room: 'room-join-sync' }));
 
-    const msgs = await waitForMessages(b, 2, 2000);
-    const types = msgs.map((m) => JSON.parse(m).type).sort();
+    const msgs = await waitForMessages(b, 3, 2000);
+    const types = msgs.map((m) => JSON.parse(m).type).filter((t) => t !== 'welcome').sort();
     expect(types).toEqual(['activity-selected', 'game-selected']);
 
     a.close();
