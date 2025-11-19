@@ -2,9 +2,9 @@ name: CI - Test & Build
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -80,6 +80,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -97,22 +98,42 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # 👇 Lowercase repository owner ONCE
+      - name: Lowercase repo owner
+        id: repo
+        run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      # 👇 Build & push all images
       - name: Build and push images
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/gameface-web:gh-${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/gameface-api:gh-${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/gameface-signaling:gh-${{ github.sha }}
           build-args: |
             NODE_ENV=production
-          file: ./apps/web/Dockerfile
-          context: .
 
-      - name: Push additional images (api/signaling)
+          # Multiple images built in one job
+          tags: |
+            ghcr.io/${{ steps.repo.outputs.owner }}/gameface-web:gh-${{ github.sha }}
+            ghcr.io/${{ steps.repo.outputs.owner }}/gameface-api:gh-${{ github.sha }}
+            ghcr.io/${{ steps.repo.outputs.owner }}/gameface-signaling:gh-${{ github.sha }}
+
+          # Define each Dockerfile target
+          file: ./Dockerfile # You can use a combined multi-stage Dockerfile OR override below
+          platforms: linux/amd64
+
+      # Optionally build separately per folder if you prefer:
+      - name: Build API & Signaling separately
         run: |
-          docker build -f ./apps/api/Dockerfile -t ghcr.io/${{ github.repository_owner }}/gameface-api:gh-${{ github.sha }} .
-          docker build -f ./apps/signaling/Dockerfile -t ghcr.io/${{ github.repository_owner }}/gameface-signaling:gh-${{ github.sha }} .
-          docker push ghcr.io/${{ github.repository_owner }}/gameface-api:gh-${{ github.sha }}
-          docker push ghcr.io/${{ github.repository_owner }}/gameface-signaling:gh-${{ github.sha }}
+          OWNER="${{ steps.repo.outputs.owner }}"
+
+          docker build \
+            -f ./apps/api/Dockerfile \
+            -t ghcr.io/$OWNER/gameface-api:gh-${{ github.sha }} .
+
+          docker build \
+            -f ./apps/signaling/Dockerfile \
+            -t ghcr.io/$OWNER/gameface-signaling:gh-${{ github.sha }} .
+
+          docker push ghcr.io/$OWNER/gameface-api:gh-${{ github.sha }}
+          docker push ghcr.io/$OWNER/gameface-signaling:gh-${{ github.sha }}

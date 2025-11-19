@@ -1,5 +1,6 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import './Toast.css';
+
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 type ToastMessage = {
   id: string;

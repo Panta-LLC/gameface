@@ -7,3 +7,4 @@ build
 video# Ignore local terraform cache and state
 infra/ec2/.terraform/
 infra/ec2/*.tfstate
+scratch

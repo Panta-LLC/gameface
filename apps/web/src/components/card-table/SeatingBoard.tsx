@@ -1,5 +1,6 @@
 import React from 'react';
-import type { TableState, GameDef } from './types';
+
+import type { GameDef, TableState } from './types';
 
 type Props = {
   tableState: TableState;
@@ -19,9 +20,7 @@ export default function SeatingBoard({
   onStartGame,
   gameDef,
   pendingSeat,
-}: Props) {
-  const isHost = tableState.hostId === currentPlayerId;
-
+}: Props): React.ReactElement {
   return (
     <div className="ct-seating" style={{ padding: 12 }}>
       <h3 style={{ marginTop: 0 }}>{gameDef.name} — Seating</h3>

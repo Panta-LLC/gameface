@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import SignalingClient from '../webrtc/SignalingClient';
 
 export function useActivitySignaling(room: string | null) {
@@ -10,7 +11,9 @@ export function useActivitySignaling(room: string | null) {
     if (clientRef.current) {
       try {
         clientRef.current.close();
-      } catch {}
+      } catch (_e) {
+        void _e; /* no-op */
+      }
       clientRef.current = null;
     }
 
@@ -27,7 +30,8 @@ export function useActivitySignaling(room: string | null) {
     });
     client.onMessage((msg) => {
       if (msg.type === 'activity-selected') {
-        setActivity(msg.activity || null);
+        const act = typeof msg.activity === 'string' ? msg.activity : null;
+        setActivity(act);
       }
     });
     return () => client.close();

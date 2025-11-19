@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { GameAdapter } from '../types';
+
 import SpadesRules from '../rules/spadesRules';
+import type { GameAdapter, SignalingClientLike, TableState } from '../types';
 
 // Minimal card utilities for a 52-card deck
 const SUITS = ['S', 'H', 'D', 'C'];
@@ -30,7 +31,7 @@ function seedFn(seed: number) {
   };
 }
 
-function shuffle<T>(arr: T[], seed = Date.now()) {
+function shuffle<T>(arr: T[], seed: number | string = Date.now()): T[] {
   const rnd = seedFn(Number(seed) & 0xffffffff);
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -40,7 +41,7 @@ function shuffle<T>(arr: T[], seed = Date.now()) {
   return a;
 }
 
-function deal(deck: Card[], players: number) {
+function deal(deck: Card[], players: number): Record<number, Card[]> {
   const hands: Record<number, Card[]> = {};
   for (let p = 0; p < players; p++) hands[p] = [];
   let idx = 0;
@@ -63,9 +64,17 @@ export const spadesAdapter: GameAdapter = {
       reason: filled ? undefined : `All ${state.seats.length} seats must be filled to start Spades`,
     };
   },
-  GameBoard: function SpadesBoard({ tableState, playerId, signaling }: any) {
+  GameBoard: function SpadesBoard({
+    tableState,
+    playerId,
+    signaling,
+  }: {
+    tableState: TableState;
+    playerId: string;
+    signaling?: SignalingClientLike | null;
+  }): React.ReactElement {
     const players = tableState.seats.length;
-    const mySeat = tableState.seats.find((s: any) => s.playerId === playerId)?.index ?? -1;
+    const mySeat = tableState.seats.find((s) => s.playerId === playerId)?.index ?? -1;
 
     const [seed] = useState<number>(() => Date.now());
     const [hands, setHands] = useState<Record<number, Card[]>>(() => ({}));
@@ -92,12 +101,14 @@ export const spadesAdapter: GameAdapter = {
     // subscribe to incoming signaling messages when available
     useEffect(() => {
       if (!signaling?.on) return;
-      const unsub = signaling.on((msg: any) => {
+      type SignalMsg = { type?: string; [key: string]: unknown };
+      const unsub = signaling.on((msg: unknown) => {
         if (!msg || typeof msg !== 'object') return;
-        switch (msg.type) {
+        const m = msg as SignalMsg;
+        switch (m.type) {
           case 'spades.start': {
             // remote start: reconstruct hands using provided seed
-            const deck = shuffle(createDeck(), msg.seed ?? seed);
+            const deck = shuffle(createDeck(), (m.seed as number) ?? seed);
             const dealt = deal(deck, players);
             setHands(dealt);
             setTurn(0);
@@ -107,7 +118,8 @@ export const spadesAdapter: GameAdapter = {
             break;
           }
           case 'spades.play': {
-            const { player, card } = msg;
+            const player = m.player as number;
+            const card = m.card as Card;
             // remove card from that player's hand if present and append to trick
             setHands((prev) => {
               const copy = { ...prev } as Record<number, Card[]>;
@@ -117,7 +129,7 @@ export const spadesAdapter: GameAdapter = {
               return copy;
             });
             setTrick((prev) => {
-              const next = [...prev, { player: msg.player, card }];
+              const next = [...prev, { player, card }];
               setTurn((t) => (t + 1) % players);
               if (next.length >= players) {
                 setTimeout(() => resolveTrick(), 250);
@@ -147,7 +159,7 @@ export const spadesAdapter: GameAdapter = {
     }
 
     // resolve trick: determine winner and update state
-    function resolveTrick(nextTurnCandidate?: number) {
+    function resolveTrick(_nextTurnCandidate?: number) {
       if (trick.length === 0) return;
       const ledSuit = trick[0].card.suit;
       // find if any spades were played

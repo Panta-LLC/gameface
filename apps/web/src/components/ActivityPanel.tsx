@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
 import './ActivityPanel.css';
+
+import React, { useEffect } from 'react';
 
 type Props = {
   activityId: string | null;

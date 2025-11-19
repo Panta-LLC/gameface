@@ -51,7 +51,10 @@ describe('join-time sync', () => {
     b.send(JSON.stringify({ type: 'join', room: 'room-join-sync' }));
 
     const msgs = await waitForMessages(b, 3, 2000);
-    const types = msgs.map((m) => JSON.parse(m).type).filter((t) => t !== 'welcome').sort();
+    const types = msgs
+      .map((m) => JSON.parse(m).type)
+      .filter((t) => t !== 'welcome')
+      .sort();
     expect(types).toEqual(['activity-selected', 'game-selected']);
 
     a.close();

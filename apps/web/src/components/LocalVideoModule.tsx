@@ -1,6 +1,7 @@
-import React from 'react';
 import './LocalVideoModule.css';
+
 import { MicrophoneIcon, VideoCameraIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import React from 'react';
 
 type Props = {
   localStream: MediaStream | null | undefined;
@@ -32,7 +33,7 @@ export default function LocalVideoModule({
         muted
         playsInline
         ref={(v) => {
-          if (v && localStream) v.srcObject = localStream as any;
+          if (v && localStream) v.srcObject = localStream;
         }}
       />
       <div className="local-video-actions" role="toolbar" aria-orientation="horizontal">

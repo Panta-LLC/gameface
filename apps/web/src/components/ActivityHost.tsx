@@ -1,5 +1,7 @@
-import React from 'react';
 import './ActivityHost.css';
+
+import React from 'react';
+
 import CardTableHost from './card-table/CardTableHost';
 import type { SignalingClientLike } from './card-table/types';
 
@@ -23,7 +25,7 @@ type Props = {
 
 export default function ActivityHost({
   activity,
-  onClose,
+  onClose: _onClose,
   onSelect,
   signalingClient,
   layout = 'default',

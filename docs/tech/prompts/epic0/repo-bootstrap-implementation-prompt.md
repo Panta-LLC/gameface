@@ -6,7 +6,7 @@ Create a cohesive repo with clear structure, consistent tooling, and commit/PR h
 
 ## Objectives
 
-- Choose package manager and workspaces (e.g., pnpm/npm workspaces; Turborepo optional) with root scripts.
+- Choose package manager and workspaces (e.g., npm workspaces; Turborepo optional) with root scripts.
 - TypeScript base config(s) shared across packages; path aliases.
 - Linting/formatting: ESLint + Prettier; EditorConfig; import/order rules.
 - Git hygiene: Conventional Commits (commitlint), PR templates, CODEOWNERS.

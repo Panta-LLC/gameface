@@ -1,6 +1,6 @@
 interface SignalingMessage {
   type: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class SignalingClient {
@@ -23,12 +23,12 @@ class SignalingClient {
         for (const h of Array.from(this.messageHandlers)) {
           try {
             h(parsed);
-          } catch (e) {
-            console.error('Signaling handler error', e);
+          } catch (_e) {
+            console.error('Signaling handler error', _e);
           }
         }
-      } catch (e) {
-        console.error('Failed to parse signaling message:', e, event.data);
+      } catch (_e) {
+        console.error('Failed to parse signaling message:', _e, event.data);
       }
     });
 
@@ -40,8 +40,8 @@ class SignalingClient {
         for (const payload of this.pending) {
           try {
             this.socket.send(payload);
-          } catch (e) {
-            console.error('Failed to flush message', e);
+          } catch (_e) {
+            console.error('Failed to flush message', _e);
           }
         }
         this.pending = [];
@@ -51,8 +51,8 @@ class SignalingClient {
         for (const cb of this.openCallbacks) {
           try {
             cb();
-          } catch (e) {
-            console.error('onOpen callback error', e);
+          } catch (_e) {
+            console.error('onOpen callback error', _e);
           }
         }
         this.openCallbacks = [];

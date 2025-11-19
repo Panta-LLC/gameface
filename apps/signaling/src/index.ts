@@ -19,7 +19,6 @@ if (isMain) {
   createSignalingServer(httpServer);
 
   httpServer.listen(port, () => {
-     
     console.log(`[signaling] WebSocket server listening on ws://localhost:${port}`);
   });
 }

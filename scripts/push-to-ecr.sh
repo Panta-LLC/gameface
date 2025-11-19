@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Usage: ./scripts/push-to-ecr.sh <aws-region> <app-name>
-AWS_REGION=${1:-us-east-1}
+AWS_REGION=${1:-us-west-2}
 APP_NAME=${2:-gameface}
 
 echo "Using AWS region: $AWS_REGION, app name: $APP_NAME"

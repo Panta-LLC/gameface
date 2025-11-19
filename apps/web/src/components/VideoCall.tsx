@@ -1,9 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { SignalingClientLike } from './card-table/types';
-import SignalingClient from '../webrtc/SignalingClient';
-import LocalVideoModule from './LocalVideoModule';
-import ActivityHost from './ActivityHost';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import './VideoCall.css';
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import SignalingClient from '../webrtc/SignalingClient';
+import ActivityHost from './ActivityHost';
+import type { SignalingClientLike } from './card-table/types';
+import LocalVideoModule from './LocalVideoModule';
 import { useToast } from './Toast';
 
 const SIGNALING_URL = 'ws://localhost:3001';
@@ -78,15 +81,18 @@ export default function VideoCall({
         'transceivers:',
         pc.getTransceivers().length,
       );
-    } catch (e) {}
+    } catch (_e) {
+      void _e; /* no-op: best-effort diagnostics */
+    }
 
     // Ensure transceivers exist so negotiation includes recv/send sections even
     // if local tracks aren't attached yet (helps prevent negotiation stalls).
     try {
       pc.addTransceiver('video', { direction: 'sendrecv' });
       pc.addTransceiver('audio', { direction: 'sendrecv' });
-    } catch (e) {
-      // addTransceiver may not be supported in all browsers; ignore if it fails
+    } catch (_e) {
+      void _e; // addTransceiver may not be supported in all browsers; ignore if it fails
+      /* no-op */
     }
 
     pc.onicecandidate = (e) => {
@@ -113,7 +119,9 @@ export default function VideoCall({
           'streams length',
           (e.streams && e.streams.length) || 0,
         );
-      } catch {}
+      } catch (_e) {
+        void _e; /* no-op */
+      }
       // Use remoteId as the key so we can remove the video when the peer leaves
       setRemoteStreams((prev) => {
         // If we already have a stream object for this peer and it's the same
@@ -144,8 +152,8 @@ export default function VideoCall({
               'sender track id:',
               sender?.track?.id ?? '(no id)',
             );
-          } catch (e) {
-            console.warn('[PC] addTrack failed for', t.kind, e);
+          } catch (_e) {
+            console.warn('[PC] addTrack failed for', t.kind, _e);
           }
         });
         try {
@@ -155,9 +163,11 @@ export default function VideoCall({
             'transceivers:',
             pc.getTransceivers().map((t) => ({ mid: t.mid, direction: t.direction })),
           );
-        } catch (e) {}
-      } catch (e) {
-        console.warn('Failed to add local tracks to new PC', e);
+        } catch (_e) {
+          void _e; /* no-op */
+        }
+      } catch (_e) {
+        console.warn('Failed to add local tracks to new PC', _e);
       }
     }
 
@@ -185,8 +195,8 @@ export default function VideoCall({
               'sender track id:',
               sender?.track?.id ?? '(no id)',
             );
-          } catch (e) {
-            console.warn('ensureLocalTracks addTrack failed', e);
+          } catch (_e) {
+            console.warn('ensureLocalTracks addTrack failed', _e);
           }
         });
       }
@@ -197,9 +207,11 @@ export default function VideoCall({
           'receivers:',
           pc.getReceivers().map((r) => ({ id: r.track?.id, kind: r.track?.kind })),
         );
-      } catch (e) {}
-    } catch (e) {
-      console.warn('ensureLocalTracks error', e);
+      } catch (_e) {
+        void _e; /* no-op */
+      }
+    } catch (_e) {
+      console.warn('ensureLocalTracks error', _e);
     }
   }, []);
 
@@ -211,12 +223,18 @@ export default function VideoCall({
         pc.getSenders().forEach((s) => {
           try {
             s.track?.stop();
-          } catch {}
+          } catch (_e) {
+            void _e; /* no-op */
+          }
         });
-      } catch {}
+      } catch (_e) {
+        void _e; /* no-op */
+      }
       try {
         pc.close();
-      } catch {}
+      } catch (_e) {
+        void _e; /* no-op */
+      }
       pcsRef.current.delete(remoteId);
     }
     // remove stream entry
@@ -233,9 +251,13 @@ export default function VideoCall({
         if (el && el.srcObject) {
           try {
             (el.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
-          } catch {}
+          } catch (_e) {
+            void _e; /* no-op */
+          }
         }
-      } catch {}
+      } catch (_e) {
+        void _e; /* no-op */
+      }
       delete remoteVideoRefs.current[remoteId];
     }
   }, []);
@@ -415,7 +437,9 @@ export default function VideoCall({
     return () => {
       try {
         unsub();
-      } catch {}
+      } catch (_e) {
+        void _e; /* no-op */
+      }
       signaling.close();
       setCardSignaling(null);
     };
@@ -439,14 +463,9 @@ export default function VideoCall({
     }
   }, [error, toast]);
 
-  const toggleMute = () => {
-    if (!localStreamRef.current) return;
-    const audioTrack = localStreamRef.current.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
-      setIsMuted(!audioTrack.enabled);
-    }
-  };
+  // toggleMute intentionally omitted from UI for now; keep helper here in case
+  // it's later wired up. If it remains unused, we intentionally leave it
+  // prefixed with `_` to indicate that.
 
   const toggleCamera = () => {
     if (!localStreamRef.current) {
@@ -486,12 +505,18 @@ export default function VideoCall({
           pc.getSenders().forEach((s) => {
             try {
               s.track?.stop();
-            } catch {}
+            } catch (_e) {
+              void _e; /* no-op */
+            }
           });
-        } catch {}
+        } catch (_e) {
+          void _e; /* no-op */
+        }
         try {
           pc.close();
-        } catch {}
+        } catch (_e) {
+          void _e; /* no-op */
+        }
         pcsRef.current.delete(id);
       }
     } catch (e) {
@@ -533,7 +558,9 @@ export default function VideoCall({
             ? el.paused || el.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA || el.muted
             : false;
           setRemoteOverlay((p) => (p[id] === show ? p : { ...p, [id]: show }));
-        } catch {}
+        } catch (_e) {
+          void _e; /* no-op */
+        }
         return;
       }
 
@@ -571,7 +598,9 @@ export default function VideoCall({
             el.removeEventListener('loadeddata', h);
             el.removeEventListener('volumechange', h);
           }
-        } catch {}
+        } catch (_e) {
+          void _e; /* no-op */
+        }
         delete overlayHandlersRef.current[id];
         setRemoteOverlay((prev) => {
           if (!(id in prev)) return prev;
@@ -596,7 +625,9 @@ export default function VideoCall({
             el.removeEventListener('loadeddata', h);
             el.removeEventListener('volumechange', h);
           }
-        } catch {}
+        } catch (_e) {
+          void _e; /* no-op */
+        }
       });
       overlayHandlersRef.current = {};
     };

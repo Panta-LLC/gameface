@@ -1,12 +1,13 @@
-import React, { useMemo, useState } from 'react';
-import type { GameDef } from './types';
-import { spadesAdapter } from './adapters/spadesAdapter';
+import './CardTable.css';
 
+import React, { useMemo, useState } from 'react';
+
+import { spadesAdapter } from './adapters/spadesAdapter';
 import CardGameSelector from './CardGameSelector';
-import SeatingBoard from './SeatingBoard';
 import GameBoardWrapper from './GameBoardWrapper';
 import { useCardTable } from './hooks/useCardTable';
-import './CardTable.css';
+import SeatingBoard from './SeatingBoard';
+import type { GameDef, SignalingClientLike } from './types';
 
 const GAMES: GameDef[] = [
   {
@@ -24,7 +25,7 @@ const GAMES: GameDef[] = [
 
 type Props = {
   currentPlayerId?: string;
-  signalingClient?: any;
+  signalingClient?: SignalingClientLike | null;
   initialGameId?: string | null;
   onClose?: () => void;
 };
@@ -34,13 +35,14 @@ export default function CardTableHost({
   signalingClient,
   initialGameId,
   onClose,
-}: Props) {
+}: Props): React.ReactElement {
   const me = currentPlayerId ?? 'guest';
   const initialGame = useMemo(
     () => GAMES.find((g) => g.id === initialGameId) ?? null,
     [initialGameId],
   );
   const [pendingVariantGame, setPendingVariantGame] = useState<GameDef | null>(null);
+
   const {
     tableState,
     pendingSeatClaim,
@@ -48,7 +50,6 @@ export default function CardTableHost({
     leaveSeat,
     attemptStart,
     selectGame,
-    send,
     signalingClient: client,
   } = useCardTable({ signaling: signalingClient, initialGame, currentPlayerId: me });
 
@@ -75,7 +76,7 @@ export default function CardTableHost({
           <div style={{ padding: 12 }}>
             <h4 style={{ marginTop: 0 }}>Choose players</h4>
             <div style={{ display: 'flex', gap: 8 }}>
-              {pendingVariantGame.playersOptions!.map((opt) => (
+              {pendingVariantGame.playersOptions!.map((opt: number) => (
                 <button
                   key={opt}
                   onClick={() => {

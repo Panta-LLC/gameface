@@ -1,8 +1,9 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { useCardTable } from './useCardTable';
+import { describe, expect, it } from 'vitest';
+
 import type { GameDef } from '../types';
+import { useCardTable } from './useCardTable';
 
 // Simple harness to expose hook actions via DOM for testing
 function Harness({ id, playerId }: { id: string; playerId: string }) {

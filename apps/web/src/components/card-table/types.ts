@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Types for the card table module
 export type GameId = string;
 export type PlayerId = string;
@@ -10,7 +11,7 @@ export type TableState = {
   seats: Seat[];
   status: TableStatus;
   hostId?: PlayerId;
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
 };
 
 import type { ComponentType } from 'react';
@@ -18,8 +19,8 @@ import type { ComponentType } from 'react';
 export interface GameAdapter {
   id: GameId;
   players: number;
-  initialState?: (seed?: string) => any;
-  GameBoard?: React.ComponentType<any>;
+  initialState?: (seed?: string | number) => any;
+  GameBoard?: ComponentType<any>;
   validateStart?: (state: TableState) => { ok: boolean; reason?: string };
   // Optional rules component to show on the seating screen (quick reference)
   rulesComponent?: ComponentType<any>;
