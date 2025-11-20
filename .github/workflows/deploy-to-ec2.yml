@@ -8,7 +8,7 @@ on:
       context:
         description: 'Path to Docker build context (relative to repo root)'
         required: false
-        default: 'apps/api'
+        default: '.'
 
 permissions:
   contents: read
@@ -32,8 +32,8 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v4
         with:
-          # use repo root as context so root-level tsconfig and shared files are available
-          context: ${{ github.event.inputs.context || '.' }}
+          # force repo root as context so root-level tsconfig and shared files are available
+          context: '.'
           # point to the Dockerfile for the api app while keeping the root as context
           file: ./apps/api/Dockerfile
           push: true
