@@ -36,8 +36,10 @@ TAG=$(git rev-parse --short HEAD 2>/dev/null || echo latest)
 
 echo "Building and pushing images with buildx (tag: ${TAG})"
 for svc in "${services[@]}"; do
-  context_dir="./apps/$svc"
-  dockerfile_path="$context_dir/Dockerfile"
+  # Use the repository root as the build context so root-level files
+  # (e.g. tsconfig.base.json) are available inside the Docker build.
+  context_dir="."
+  dockerfile_path="./apps/$svc/Dockerfile"
   if [ ! -f "$dockerfile_path" ]; then
     echo "Warning: Dockerfile not found for service '$svc' at $dockerfile_path; skipping"
     continue
