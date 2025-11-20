@@ -2,7 +2,7 @@ name: Deploy to EC2 (Docker)
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
     inputs:
       context:
@@ -41,10 +41,24 @@ jobs:
 
       - name: Prepare SSH key
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+          # Use $HOME explicitly and ensure the secret exists before writing
+          set -euo pipefail
+          SSH_DIR="$HOME/.ssh"
+          mkdir -p "$SSH_DIR"
+          chmod 700 "$SSH_DIR"
+
+          if [ -z "${{ secrets.EC2_SSH_PRIVATE_KEY }}" ]; then
+            echo "ERROR: secret EC2_SSH_PRIVATE_KEY is not set. Cannot prepare SSH key."
+            exit 1
+          fi
+
+          # Write private key safely (preserve newlines) and restrict permissions
+          printf '%s\n' "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > "$SSH_DIR/id_rsa"
+          chmod 600 "$SSH_DIR/id_rsa"
+
+          if [ -n "${{ secrets.EC2_HOST }}" ]; then
+            ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> "$SSH_DIR/known_hosts" || true
+          fi
 
       - name: Deploy to EC2 via SSH
         env:
