@@ -29,6 +29,14 @@ jobs:
           # Provide a sensible default so the action always receives a region
           echo "AWS_REGION=${{ secrets.AWS_REGION || 'us-east-1' }}" >> $GITHUB_ENV
 
+      - name: Expose secrets to env
+        # Populate environment variables from secrets so `if` expressions can read them
+        run: |
+          echo "AWS_ROLE_ARN=${{ secrets.AWS_ROLE_ARN }}" >> $GITHUB_ENV
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "APP_NAME=${{ secrets.APP_NAME }}" >> $GITHUB_ENV
+
       - name: Validate AWS credentials present
         run: |
           # Fail fast with a clear message if no credentials are available
@@ -39,14 +47,14 @@ jobs:
           fi
 
       - name: Configure AWS credentials (assume role via OIDC)
-        if: ${{ secrets.AWS_ROLE_ARN != '' }}
+        if: ${{ env.AWS_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
 
       - name: Configure AWS credentials (access keys)
-        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-region: ${{ env.AWS_REGION }}
@@ -56,9 +64,24 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and push images
+      - name: Build and push images (ECR)
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          APP_NAME: ${{ secrets.APP_NAME }}
         run: |
-          ./scripts/push-to-ecr.sh "${{ env.AWS_REGION }}" "${{ secrets.APP_NAME }}"
+          set -euo pipefail
+          echo "Building and pushing images using scripts/push-to-ecr.sh"
+
+          # Resolve AWS account id from current credentials
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "Using AWS account: $ACCOUNT_ID"
+
+          chmod +x ./scripts/push-to-ecr.sh
+
+          # Export variables expected by the script
+          export ACCOUNT_ID
+
+          ./scripts/push-to-ecr.sh
 
   terraform:
     runs-on: ubuntu-latest

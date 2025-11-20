@@ -21,7 +21,6 @@ ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 echo "AWS Account: $ACCOUNT_ID"
 
 services=(api signaling web)
-
 echo "Ensuring ECR repositories exist..."
 for svc in "${services[@]}"; do
   repo_name="${APP_NAME}-${svc}"
@@ -33,16 +32,25 @@ done
 echo "Logging into ECR"
 aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-echo "Tagging and pushing images"
+TAG=$(git rev-parse --short HEAD 2>/dev/null || echo latest)
+
+echo "Building and pushing images with buildx (tag: ${TAG})"
 for svc in "${services[@]}"; do
-  local_image="gameface-${svc}:latest"
-  remote_repo="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${APP_NAME}-${svc}:latest"
+  context_dir="./apps/$svc"
+  dockerfile_path="$context_dir/Dockerfile"
+  if [ ! -f "$dockerfile_path" ]; then
+    echo "Warning: Dockerfile not found for service '$svc' at $dockerfile_path; skipping"
+    continue
+  fi
 
-  echo "Tagging $local_image -> $remote_repo"
-  docker tag "$local_image" "$remote_repo"
+  remote_repo="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${APP_NAME}-${svc}:${TAG}"
+  echo "Building $svc -> $remote_repo (context: $context_dir, dockerfile: $dockerfile_path)"
 
-  echo "Pushing $remote_repo"
-  docker push "$remote_repo"
+  docker buildx build \
+    --platform linux/amd64,linux/arm64 \
+    --file "$dockerfile_path" \
+    --tag "$remote_repo" \
+    --push "$context_dir"
 done
 
-echo "All images pushed."
+echo "All images built and pushed."
