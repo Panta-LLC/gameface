@@ -24,10 +24,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Ensure AWS region is set
+        run: |
+          # Provide a sensible default so the action always receives a region
+          echo "AWS_REGION=${{ secrets.AWS_REGION || 'us-east-1' }}" >> $GITHUB_ENV
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
 
       - name: Login to ECR
@@ -35,7 +40,7 @@ jobs:
 
       - name: Build and push images
         run: |
-          ./scripts/push-to-ecr.sh "${{ secrets.AWS_REGION }}" "${{ secrets.APP_NAME }}"
+          ./scripts/push-to-ecr.sh "${{ env.AWS_REGION }}" "${{ secrets.APP_NAME }}"
 
   terraform:
     runs-on: ubuntu-latest
