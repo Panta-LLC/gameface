@@ -60,6 +60,28 @@ jobs:
             ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> "$SSH_DIR/known_hosts" || true
           fi
 
+      - name: Verify SSH connectivity
+        run: |
+          set -euo pipefail
+          if [ -z "${{ secrets.EC2_HOST }}" ]; then
+            echo "ERROR: EC2_HOST secret is not set. Cannot verify connectivity."
+            exit 1
+          fi
+
+          echo "Checking SSH connectivity to ${{ secrets.EC2_HOST }}:22 (timeout 10s)"
+          SSH_CMD=(ssh -v -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i "$HOME/.ssh/id_rsa" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'echo connected')
+
+          if "${SSH_CMD[@]}"; then
+            echo "SSH connectivity check succeeded"
+          else
+            echo "ERROR: SSH connectivity check failed. Typical causes:"
+            echo " - EC2 instance is stopped or not reachable on port 22"
+            echo " - Security Group blocks inbound SSH from GitHub Actions runners (allow port 22 from runner IPs or 0.0.0.0/0 for testing)"
+            echo " - Wrong host or user in secrets (EC2_HOST / EC2_USER)"
+            echo " - Network ACL or firewall blocking access"
+            exit 2
+          fi
+
       - name: Deploy to EC2 via SSH
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
