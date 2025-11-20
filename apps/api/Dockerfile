@@ -5,6 +5,11 @@ WORKDIR /workspace
 # and shared packages resolve correctly for TypeScript builds.
 COPY . .
 
+# Some repo tsconfig files use absolute/monorepo-root paths when resolving
+# configs. Copy the repo root base config to the image root so `tsc` can
+# resolve "/tsconfig.base.json" during the build step.
+COPY tsconfig.base.json /tsconfig.base.json
+
 RUN npm install --legacy-peer-deps
 
 WORKDIR /workspace/apps/api
