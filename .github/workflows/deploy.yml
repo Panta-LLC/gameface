@@ -39,8 +39,8 @@ jobs:
 
       - name: Validate AWS credentials present
         run: |
-          # Fail fast with a clear message if no credentials are available
-          if [ -z "${{ secrets.AWS_ROLE_ARN }}" ] && ( [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ] || [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ] ); then
+          # Fail fast with a clear message if no credentials are available (use env values written to GITHUB_ENV)
+          if [ -z "${AWS_ROLE_ARN:-}" ] && ( [ -z "${AWS_ACCESS_KEY_ID:-}" ] || [ -z "${AWS_SECRET_ACCESS_KEY:-}" ] ); then
             echo "ERROR: No AWS credentials configured for this workflow."
             echo "Set either the secret 'AWS_ROLE_ARN' (with OIDC permissions) or both 'AWS_ACCESS_KEY_ID' and 'AWS_SECRET_ACCESS_KEY' in repository Secrets."
             exit 1
@@ -50,14 +50,14 @@ jobs:
         if: ${{ env.AWS_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION || 'us-east-1' }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
 
       - name: Configure AWS credentials (access keys)
         if: ${{ env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION || 'us-east-1' }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
