@@ -9,6 +9,8 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
     permissions:
       contents: read
       packages: write
@@ -27,7 +29,7 @@ jobs:
       - name: Ensure AWS region is set
         run: |
           # Provide a sensible default so the action always receives a region
-          echo "AWS_REGION=${{ secrets.AWS_REGION || 'us-east-1' }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${AWS_REGION}" >> $GITHUB_ENV
 
       - name: Expose secrets to env
         # Populate environment variables from secrets so `if` expressions can read them
@@ -47,17 +49,17 @@ jobs:
           fi
 
       - name: Configure AWS credentials (assume role via OIDC)
-        if: ${{ env.AWS_ROLE_ARN != '' }}
+        if: ${{ secrets.AWS_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
 
       - name: Configure AWS credentials (access keys)
-        if: ${{ env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
