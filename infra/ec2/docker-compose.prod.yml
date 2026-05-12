@@ -1,0 +1,52 @@
+# Production compose file rsync'd to the EC2 host by the deploy workflow.
+# Mongo and Redis are intentionally NOT here — they move to managed services
+# (Atlas + Upstash) in Phase 2. Until then api/signaling read those URLs from
+# /etc/gameface/.env (rendered from SSM, also Phase 2).
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+      - signaling
+      - web
+
+  api:
+    image: ${DOCKERHUB_USERNAME}/gameface-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    expose:
+      - '3000'
+    env_file:
+      - /etc/gameface/.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+
+  signaling:
+    image: ${DOCKERHUB_USERNAME}/gameface-signaling:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    expose:
+      - '3001'
+    env_file:
+      - /etc/gameface/.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+
+  web:
+    image: ${DOCKERHUB_USERNAME}/gameface-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    expose:
+      - '80'
+
+volumes:
+  caddy-data:
+  caddy-config:

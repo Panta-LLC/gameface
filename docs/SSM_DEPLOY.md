@@ -1,5 +1,15 @@
 # Deploying via AWS SSM (Run Command)
 
+> **Status:** alternative path. The default deploy is the SSH-based
+> [`deploy-to-ec2.yml`](../.github/workflows/deploy-to-ec2.yml) — see
+> [`DEPLOYMENT.md`](./DEPLOYMENT.md). Use SSM when you don't want port 22
+> open or you need an audit trail in CloudTrail.
+>
+> **Limitation:** the current `deploy-ssm.yml` only ships the `apps/api`
+> image. To deploy the full app via SSM you'd need to extend the workflow
+> with the same matrix-build + `docker compose` flow used in
+> `deploy-to-ec2.yml`. This is tracked as a Phase 0+ follow-up.
+
 This document explains how to use the `deploy-ssm.yml` GitHub Actions workflow that builds/pushes the `apps/api` Docker image and deploys it to an EC2 instance using AWS Systems Manager (SSM) Run Command.
 
 ## Why use SSM

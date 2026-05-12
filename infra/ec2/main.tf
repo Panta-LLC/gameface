@@ -31,8 +31,12 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "gameface_sg" {
   count       = var.existing_sg_id == "" ? 1 : 0
   name        = "gameface-sg"
-  description = "Allow SSH and HTTP inbound"
+  description = "SSH (CI deploy), HTTP (ACME challenge), HTTPS (app)"
 
+  # Port 22 left open in Phase 0 because the deploy workflow uses SSH from
+  # GitHub Actions runners (whose IPs rotate). Phase 0+ TODO: switch deploy
+  # to SSM RunCommand and tighten this to "no inbound" (interactive access
+  # via SSM Session Manager).
   ingress {
     from_port   = 22
     to_port     = 22
@@ -40,9 +44,19 @@ resource "aws_security_group" "gameface_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # HTTP: kept open for Let's Encrypt ACME HTTP-01 challenge (Phase 1) and
+  # for the Phase 0 placeholder routing before TLS exists.
   ingress {
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # HTTPS: required for WebRTC getUserMedia in browsers (Phase 1).
+  ingress {
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
