@@ -10,6 +10,11 @@ services:
     ports:
       - '80:80'
       - '443:443'
+    environment:
+      # DOMAIN is required (Caddyfile uses it as the site host); validated
+      # by the deploy workflow before reaching this file.
+      - DOMAIN
+      - LETSENCRYPT_EMAIL
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
@@ -29,6 +34,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      # CORS allowlist; constructed by the deploy workflow as
+      # https://${DOMAIN} (extend with staging hosts later).
+      - CORS_ORIGINS
 
   signaling:
     image: ${DOCKERHUB_USERNAME}/gameface-signaling:${IMAGE_TAG:-latest}
