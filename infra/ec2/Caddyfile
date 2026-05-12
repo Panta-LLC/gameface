@@ -1,0 +1,38 @@
+# Phase 0 placeholder Caddyfile.
+#
+# Listens on :80 only. TLS, real hostnames, and Let's Encrypt are added in
+# Phase 1 when a domain is registered. Until then this routes by path so a
+# single host can serve all three apps for smoke testing.
+#
+# Routing:
+#   /api/*       -> api:3000      (path prefix stripped, so /api/health -> /health)
+#   /signaling   -> signaling:3001 (WebSocket upgrade)
+#   /healthz     -> Caddy itself, for uptime probes
+#   everything else -> web:80     (nginx serving the Vite build)
+
+{
+	# Disable automatic HTTPS in Phase 0; re-enabled in Phase 1.
+	auto_https off
+}
+
+:80 {
+	encode zstd gzip
+
+	respond /healthz 200 {
+		body "ok"
+		close
+	}
+
+	handle_path /api/* {
+		reverse_proxy api:3000
+	}
+
+	# WebSocket signaling. Caddy auto-handles Upgrade headers.
+	handle /signaling* {
+		reverse_proxy signaling:3001
+	}
+
+	handle {
+		reverse_proxy web:80
+	}
+}
