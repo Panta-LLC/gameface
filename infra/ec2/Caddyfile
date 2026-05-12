@@ -1,21 +1,22 @@
-# Phase 0 placeholder Caddyfile.
+# Phase 1: TLS via Let's Encrypt.
 #
-# Listens on :80 only. TLS, real hostnames, and Let's Encrypt are added in
-# Phase 1 when a domain is registered. Until then this routes by path so a
-# single host can serve all three apps for smoke testing.
+# DOMAIN must be set in the container environment (rendered from the GitHub
+# Actions DOMAIN secret by the deploy workflow). LETSENCRYPT_EMAIL is
+# optional; defaults to an anonymous LE account if unset.
 #
 # Routing:
 #   /api/*       -> api:3000      (path prefix stripped, so /api/health -> /health)
 #   /signaling   -> signaling:3001 (WebSocket upgrade)
 #   /healthz     -> Caddy itself, for uptime probes
 #   everything else -> web:80     (nginx serving the Vite build)
+#
+# HTTP -> HTTPS redirect is automatic when a domain is configured.
 
 {
-	# Disable automatic HTTPS in Phase 0; re-enabled in Phase 1.
-	auto_https off
+	email {$LETSENCRYPT_EMAIL:admin@example.com}
 }
 
-:80 {
+{$DOMAIN} {
 	encode zstd gzip
 
 	respond /healthz 200 {

@@ -12,7 +12,26 @@ env:
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
+  validate-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate required secrets
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "${{ secrets.DOMAIN }}" ]              || missing+=("DOMAIN")
+          [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ]  || missing+=("DOCKERHUB_USERNAME")
+          [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]     || missing+=("DOCKERHUB_TOKEN")
+          [ -n "${{ secrets.EC2_HOST }}" ]            || missing+=("EC2_HOST")
+          [ -n "${{ secrets.EC2_USER }}" ]            || missing+=("EC2_USER")
+          [ -n "${{ secrets.EC2_SSH_PRIVATE_KEY }}" ] || missing+=("EC2_SSH_PRIVATE_KEY")
+          if [ "${#missing[@]}" -ne 0 ]; then
+            echo "::error::Missing required repo secrets: ${missing[*]}"
+            exit 1
+          fi
+
   build:
+    needs: validate-secrets
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -37,6 +56,11 @@ jobs:
           context: .
           file: ./apps/${{ matrix.app }}/Dockerfile
           push: true
+          # Vite build args are only consumed by apps/web/Dockerfile;
+          # other Dockerfiles ignore unknown ARGs harmlessly.
+          build-args: |
+            VITE_API_URL=https://${{ secrets.DOMAIN }}/api
+            VITE_SIGNALING_URL=wss://${{ secrets.DOMAIN }}/signaling
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/gameface-${{ matrix.app }}:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/gameface-${{ matrix.app }}:latest
@@ -57,25 +81,13 @@ jobs:
           mkdir -p "$SSH_DIR"
           chmod 700 "$SSH_DIR"
 
-          if [ -z "${{ secrets.EC2_SSH_PRIVATE_KEY }}" ]; then
-            echo "ERROR: secret EC2_SSH_PRIVATE_KEY is not set."
-            exit 1
-          fi
-
           printf '%s\n' "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > "$SSH_DIR/id_rsa"
           chmod 600 "$SSH_DIR/id_rsa"
-
-          if [ -n "${{ secrets.EC2_HOST }}" ]; then
-            ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> "$SSH_DIR/known_hosts" || true
-          fi
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> "$SSH_DIR/known_hosts" || true
 
       - name: Verify SSH connectivity
         run: |
           set -euo pipefail
-          if [ -z "${{ secrets.EC2_HOST }}" ]; then
-            echo "ERROR: EC2_HOST secret is not set."
-            exit 1
-          fi
           ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
             -i "$HOME/.ssh/id_rsa" \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" 'echo connected'
@@ -93,24 +105,29 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           IMAGE_TAG: ${{ github.sha }}
+          DOMAIN: ${{ secrets.DOMAIN }}
+          LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL }}
         run: |
+          CORS_ORIGINS="https://$DOMAIN"
           ssh -o StrictHostKeyChecking=no -i "$HOME/.ssh/id_rsa" \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
             DOCKERHUB_USERNAME="$DOCKERHUB_USERNAME" \
             DOCKERHUB_TOKEN="$DOCKERHUB_TOKEN" \
             IMAGE_TAG="$IMAGE_TAG" \
+            DOMAIN="$DOMAIN" \
+            LETSENCRYPT_EMAIL="$LETSENCRYPT_EMAIL" \
+            CORS_ORIGINS="$CORS_ORIGINS" \
             'bash -s' <<'REMOTE'
           set -euo pipefail
 
-          # Phase 0: env_file is referenced by compose but secrets land in
-          # Phase 2. Until then, ensure the file exists so compose doesn't
-          # error on the volume mount.
+          # env_file is referenced by compose but live secrets land in Phase 2.
+          # Until then, ensure the file exists so the volume mount doesn't error.
           sudo mkdir -p /etc/gameface
           sudo touch /etc/gameface/.env
           sudo chmod 600 /etc/gameface/.env
 
-          # Install docker compose plugin if missing (Ubuntu 22.04 default
-          # docker.io package ships v1 only; v2 is the `docker compose` CLI).
+          # Install docker compose plugin if missing (Ubuntu 22.04's docker.io
+          # package ships v1 only; v2 is the `docker compose` CLI).
           if ! docker compose version >/dev/null 2>&1; then
             echo "Installing docker compose plugin..."
             sudo mkdir -p /usr/local/lib/docker/cli-plugins
@@ -123,27 +140,29 @@ jobs:
           echo "$DOCKERHUB_TOKEN" | sudo docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
           cd "$HOME"
-          export DOCKERHUB_USERNAME IMAGE_TAG
+          export DOCKERHUB_USERNAME IMAGE_TAG DOMAIN LETSENCRYPT_EMAIL CORS_ORIGINS
 
-          sudo --preserve-env=DOCKERHUB_USERNAME,IMAGE_TAG \
+          sudo --preserve-env=DOCKERHUB_USERNAME,IMAGE_TAG,DOMAIN,LETSENCRYPT_EMAIL,CORS_ORIGINS \
             docker compose -f docker-compose.prod.yml pull
-          sudo --preserve-env=DOCKERHUB_USERNAME,IMAGE_TAG \
+          sudo --preserve-env=DOCKERHUB_USERNAME,IMAGE_TAG,DOMAIN,LETSENCRYPT_EMAIL,CORS_ORIGINS \
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
           # Prune dangling images to keep the t3a.small disk happy.
           sudo docker image prune -f
           REMOTE
 
-      - name: Smoke test
+      - name: Smoke test (HTTPS)
         run: |
           set -euo pipefail
-          for i in 1 2 3 4 5 6; do
-            if curl -fsS --max-time 5 "http://${{ secrets.EC2_HOST }}/healthz" >/dev/null; then
-              echo "healthz OK"
+          DOMAIN="${{ secrets.DOMAIN }}"
+          # Caddy may take 30-60s to fetch the LE cert on first deploy.
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            if curl -fsS --max-time 10 "https://$DOMAIN/healthz" >/dev/null; then
+              echo "https healthz OK"
               break
             fi
-            echo "Waiting for caddy ($i/6)..."
-            sleep 5
+            echo "Waiting for Caddy + TLS ($i/12)..."
+            sleep 10
           done
-          curl -fsS --max-time 5 "http://${{ secrets.EC2_HOST }}/healthz"
-          curl -fsS --max-time 5 "http://${{ secrets.EC2_HOST }}/api/health"
+          curl -fsS --max-time 10 "https://$DOMAIN/healthz"
+          curl -fsS --max-time 10 "https://$DOMAIN/api/health"

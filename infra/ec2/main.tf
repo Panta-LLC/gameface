@@ -100,3 +100,13 @@ resource "aws_instance" "gameface" {
     Name = "gameface-deploy"
   }
 }
+
+# Stable public IP that survives instance replacement. Set this as the
+# A-record target in DNS (Cloudflare etc.) once and forget.
+resource "aws_eip" "gameface" {
+  domain   = "vpc"
+  instance = aws_instance.gameface.id
+  tags = {
+    Name = "gameface-eip"
+  }
+}

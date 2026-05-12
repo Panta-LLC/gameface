@@ -59,13 +59,15 @@ service joins the topology in Phase 3.
 
 ### Required GitHub secrets
 
-| Secret                | Purpose                                                     |
-| --------------------- | ----------------------------------------------------------- |
-| `DOCKERHUB_USERNAME`  | Owner of the `gameface-*` Docker Hub repos                  |
-| `DOCKERHUB_TOKEN`     | Push access                                                 |
-| `EC2_HOST`            | Public IP / DNS of the EC2 host                             |
-| `EC2_USER`            | SSH user (`ubuntu` for the AMI in `infra/ec2/`)             |
-| `EC2_SSH_PRIVATE_KEY` | Private key whose public counterpart is in `var.public_key` |
+| Secret                | Purpose                                                                  |
+| --------------------- | ------------------------------------------------------------------------ |
+| `DOMAIN`              | Hostname for TLS, e.g. `gameface.example.com` (Phase 1+)                 |
+| `LETSENCRYPT_EMAIL`   | _Optional._ Account email for LE expiry notifications                    |
+| `DOCKERHUB_USERNAME`  | Owner of the `gameface-*` Docker Hub repos                               |
+| `DOCKERHUB_TOKEN`     | Push access                                                              |
+| `EC2_HOST`            | Public IP / DNS of the EC2 host (set to the EIP from `terraform output`) |
+| `EC2_USER`            | SSH user (`ubuntu` for the AMI in `infra/ec2/`)                          |
+| `EC2_SSH_PRIVATE_KEY` | Private key whose public counterpart is in `var.public_key`              |
 
 ## Initial provisioning
 
@@ -80,12 +82,16 @@ terraform apply \
 Then set the GitHub secrets above using the outputs:
 
 ```sh
-gh secret set EC2_HOST  --body "$(terraform output -raw public_ip)"
-gh secret set EC2_USER  --body "$(terraform output -raw ssh_user)"
+gh secret set EC2_HOST            --body "$(terraform output -raw public_ip)"
+gh secret set EC2_USER            --body "$(terraform output -raw ec2_ssh_user)"
 gh secret set EC2_SSH_PRIVATE_KEY < ~/.ssh/id_rsa
+gh secret set DOMAIN              --body "your-domain.example.com"
+gh secret set LETSENCRYPT_EMAIL   --body "you@example.com"   # optional
 ```
 
-A push to `main` then deploys automatically.
+Point your DNS A-record at the `EC2_HOST` value (the Elastic IP, stable
+across instance replacement). See [`PHASE1_TLS.md`](./PHASE1_TLS.md) for the
+full Cloudflare setup. A push to `main` then deploys automatically.
 
 ## Local dev
 
@@ -109,10 +115,9 @@ npm run verify:dev   # smoke-tests health + signaling echo + Vite
 
 ## Phase status
 
-The current deploy reaches "Phase 0" — all three apps deploy on every push
-behind Caddy on a plain HTTP host. **WebRTC will not work over plain HTTP**
-because browsers block `getUserMedia` outside `localhost`. Phase 1 (TLS +
-domain via Cloudflare + Let's Encrypt in Caddy) unblocks the frontend.
+The current deploy reaches **Phase 1** — all three apps deploy on push to
+`main` behind Caddy with automatic TLS via Let's Encrypt. See
+[`PHASE1_TLS.md`](./PHASE1_TLS.md) for the Cloudflare DNS + SSL runbook.
 
 Roadmap phases beyond TLS — managed Mongo/Redis, secrets via SSM, identity
 service, observability, beta hardening — are tracked in the project plan.
